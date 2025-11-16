@@ -3,7 +3,7 @@ using System;
 namespace ERPAccounting.Domain.Entities;
 
 /// <summary>
-/// Base entity sa audit poljima
+/// Base entity with audit fields
 /// </summary>
 public abstract class BaseEntity
 {

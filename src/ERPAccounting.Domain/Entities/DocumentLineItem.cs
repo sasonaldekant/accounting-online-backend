@@ -4,30 +4,32 @@ using System.ComponentModel.DataAnnotations;
 namespace ERPAccounting.Domain.Entities;
 
 /// <summary>
-/// Stavka dokumenta (tblStavkaDokumenta)
-/// KRITIČNO: Sadrži RowVersion za ETag konkurentnost
+/// Document Line Item (tblStavkaDokumenta)
+/// KRITIČNO: Sa RowVersion za ETag konkurentnost
 /// </summary>
 public class DocumentLineItem : BaseEntity
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid DocumentId { get; set; }
     
-    // Osnovni podaci
-    public int ArtikalId { get; set; }
-    public decimal Kolicina { get; set; }
-    public decimal FakturnaCena { get; set; }
-    public decimal Rabat { get; set; } = 0;
-    public decimal Marza { get; set; } = 0;
-    public int PoreskaStopa { get; set; } = 20;
+    // Article info
+    public int ArticleId { get; set; }
     
-    // Obračun
-    public bool ObracunAkciza { get; set; } = false;
-    public bool ObracunPorez { get; set; } = true;
+    // Pricing
+    public decimal Quantity { get; set; }
+    public decimal Price { get; set; }
+    public decimal Discount { get; set; } = 0;
+    public decimal Margin { get; set; } = 0;
     
-    // KRITIČNO: ETag konkurentnost
+    // Tax
+    public int VatRate { get; set; } = 20;
+    public bool CalculateExcise { get; set; } = false;
+    public bool CalculateTax { get; set; } = true;
+    
     /// <summary>
-    /// RowVersion za optimistic concurrency control
-    /// Automatski se ažurira od strane SQL Servera pri svakom UPDATE-u
+    /// KRITIČNO: RowVersion za konkurentnost (ETag)
+    /// SQL Server: TIMESTAMP
+    /// EF Core: [Timestamp] attribute
     /// </summary>
     [Timestamp]
     public byte[] RowVersion { get; set; } = Array.Empty<byte>();

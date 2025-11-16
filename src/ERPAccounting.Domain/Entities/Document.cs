@@ -4,13 +4,13 @@ using System.Collections.Generic;
 namespace ERPAccounting.Domain.Entities;
 
 /// <summary>
-/// Dokument (tblDokument)
+/// Document (tblDokument) - Header entity
 /// </summary>
 public class Document : BaseEntity
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     
-    // Osnovni podaci
+    // Required fields
     public string BrojDokumenta { get; set; } = string.Empty;
     public DateTime Datum { get; set; }
     public int PartnerId { get; set; }
@@ -20,11 +20,11 @@ public class Document : BaseEntity
     public decimal KursValute { get; set; } = 1.0m;
     public int NacinOporezivanjaId { get; set; }
     
-    // Opciono
-    public int? ReferentniDokumentId { get; set; }
+    // Optional fields
+    public Guid? ReferentniDokumentId { get; set; }
     public string? Napomena { get; set; }
     
-    // Obračun
+    // Business flags
     public bool ObracunAkciza { get; set; } = false;
     public bool ObracunPorez { get; set; } = true;
     public bool Procesiran { get; set; } = false;

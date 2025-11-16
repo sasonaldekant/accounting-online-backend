@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ERPAccounting.Domain.Entities;
 
 /// <summary>
-/// Zavisni trošak dokumenta (tblDokumentTroskovi)
+/// Document Cost (tblDokumentTroskovi) - Dependent cost header
 /// </summary>
 public class DocumentCost : BaseEntity
 {
@@ -21,5 +21,5 @@ public class DocumentCost : BaseEntity
     
     // Navigation
     public virtual Document Document { get; set; } = null!;
-    public virtual ICollection<DependentCostLineItem> CostLineItems { get; set; } = new List<DependentCostLineItem>();
+    public virtual ICollection<DependentCostLineItem> LineItems { get; set; } = new List<DependentCostLineItem>();
 }
