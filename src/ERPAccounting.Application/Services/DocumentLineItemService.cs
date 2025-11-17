@@ -2,6 +2,7 @@ using ERPAccounting.Application.DTOs;
 using ERPAccounting.Application.Services.Contracts;
 using ERPAccounting.Domain.Entities;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 
@@ -92,7 +93,7 @@ namespace ERPAccounting.Application.Services
             if (entity.StavkaDokumentaTimeStamp is null || !entity.StavkaDokumentaTimeStamp.SequenceEqual(expectedRowVersion))
             {
                 _logger.LogWarning("RowVersion mismatch for item {ItemId}", itemId);
-                throw new InvalidOperationException("RowVersion mismatch");
+                throw new DbUpdateConcurrencyException("RowVersion mismatch");
             }
 
             ApplyPatch(entity, dto);
