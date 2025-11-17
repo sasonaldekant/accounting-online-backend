@@ -1,4 +1,5 @@
 using ERPAccounting.Application.DTOs;
+using ERPAccounting.Application.Services;
 using ERPAccounting.Domain.Entities;
 using ERPAccounting.Infrastructure.Data;
 using FluentValidation;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 
-namespace ERPAccounting.Application.Services
+namespace ERPAccounting.Infrastructure.Services
 {
     /// <summary>
     /// Implementacija servisa za stavke dokumenta koja upravlja validacijom, mapiranjem i konkurentnošću.
