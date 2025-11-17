@@ -3,10 +3,9 @@ using System;
 namespace ERPAccounting.Application.DTOs.Documents;
 
 /// <summary>
-/// DTO za response dokumenta sa ETag vrednošću za konkurentnost
+/// DTO za potpuno ažuriranje zaglavlja dokumenta uz If-Match
 /// </summary>
-public record DocumentDto(
-    int Id,
+public record UpdateDocumentDto(
     string DocumentNumber,
     DateTime DocumentDate,
     int? PartnerId,
@@ -16,9 +15,4 @@ public record DocumentDto(
     decimal DependentCostsVat,
     string? Note,
     bool Processed,
-    bool Posted,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
-    int? CreatedBy,
-    int? UpdatedBy,
-    string ETag);
+    bool Posted);

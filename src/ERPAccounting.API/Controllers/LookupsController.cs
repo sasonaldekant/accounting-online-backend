@@ -19,14 +19,14 @@ namespace ERPAccounting.API.Controllers
     [Authorize]
     public class LookupsController : ControllerBase
     {
-        private readonly IStoredProcedureService _spService;
+        private readonly ILookupService _lookupService;
         private readonly ILogger<LookupsController> _logger;
 
         public LookupsController(
-            IStoredProcedureService spService,
+            ILookupService lookupService,
             ILogger<LookupsController> logger)
         {
-            _spService = spService;
+            _lookupService = lookupService;
             _logger = logger;
         }
 
@@ -35,7 +35,7 @@ namespace ERPAccounting.API.Controllers
         public Task<ActionResult<List<PartnerComboDto>>> GetPartners()
             => ExecuteLookupAsync(async () =>
             {
-                var result = await _spService.GetPartnerComboAsync();
+                var result = await _lookupService.GetPartnerComboAsync();
                 _logger.LogInformation("Partners loaded: {Count}", result.Count);
                 return result;
             }, "partnera");

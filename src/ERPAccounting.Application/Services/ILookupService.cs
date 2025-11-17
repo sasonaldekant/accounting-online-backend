@@ -3,10 +3,9 @@ using ERPAccounting.Application.DTOs;
 namespace ERPAccounting.Application.Services
 {
     /// <summary>
-    /// Interfejs za Stored Procedures servis
-    /// Definiše sve 11 SP metoda koje vraćaju combo podatke
+    /// Interfejs za Lookup servis koji vraća podatke iz Stored Procedures
     /// </summary>
-    public interface IStoredProcedureService
+    public interface ILookupService
     {
         Task<List<PartnerComboDto>> GetPartnerComboAsync();
         Task<List<OrgUnitComboDto>> GetOrgUnitsComboAsync(string docTypeId);

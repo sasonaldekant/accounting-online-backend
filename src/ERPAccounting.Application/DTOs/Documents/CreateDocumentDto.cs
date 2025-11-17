@@ -6,16 +6,13 @@ namespace ERPAccounting.Application.DTOs.Documents;
 /// DTO za kreiranje novog dokumenta
 /// </summary>
 public record CreateDocumentDto(
-    string BrojDokumenta,
-    DateTime Datum,
-    int PartnerId,
-    int OrganizacionaJedinicaId,
-    int RadnikId,
-    int ValutaId,
-    decimal KursValute,
-    int NacinOporezivanjaId,
-    Guid? ReferentniDokumentId,
-    string? Napomena,
-    bool ObracunAkciza,
-    bool ObracunPorez
-);
+    string DocumentNumber,
+    DateTime DocumentDate,
+    int? PartnerId,
+    int OrganizationalUnitId,
+    int? ReferentDocumentId,
+    decimal DependentCostsNet,
+    decimal DependentCostsVat,
+    string? Note,
+    bool Processed,
+    bool Posted);
