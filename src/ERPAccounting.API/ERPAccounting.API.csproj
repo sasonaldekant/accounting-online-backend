@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ERPAccounting.Application\ERPAccounting.Application.csproj" />
     <ProjectReference Include="..\ERPAccounting.Infrastructure\ERPAccounting.Infrastructure.csproj" />
+    <ProjectReference Include="..\ERPAccounting.Common\ERPAccounting.Common.csproj" />
   </ItemGroup>
 
 </Project>

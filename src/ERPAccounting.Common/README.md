@@ -4,39 +4,38 @@
 
 ## Odgovornosti
 - Custom exceptions
-- Constants
-- Extension methods
-- Common models
+- Constants (API routes, error poruke, kodovi)
+- Extension methods (exception handling)
+- Common response modeli (ProblemDetails)
 - Helpers
 
 ## Struktura
 ```
 Exceptions/
-├── ConflictException.cs        # Za 409 Conflict (ETag)
+├── DomainException.cs
+├── ConflictException.cs
 ├── NotFoundException.cs
 └── ValidationException.cs
 
 Constants/
 ├── ApiRoutes.cs
+├── ErrorCodes.cs
 └── ErrorMessages.cs
 
 Extensions/
 └── ExceptionHandlingExtensions.cs
 
 Models/
-├── ApiResponse.cs
-├── PaginationMetadata.cs
-└── ErrorResponse.cs
+├── ProblemDetailsDto.cs
+└── ConflictDetailsDto.cs
 ```
 
 ## Key Classes
 
-### ConflictException (KRITIČNO)
+### DomainException + izvedene klase
 ```csharp
-public class ConflictException : Exception
-{
-    public ConflictException(string message) : base(message) { }
-}
+throw new NotFoundException(ErrorMessages.DocumentLineItemNotFound, itemId.ToString(), "DocumentLineItem");
 ```
 
-Koristi se za ETag konkurentnost - vraća HTTP 409.
+### ProblemDetailsDto
+Standardizovani odgovor za greške (kompatibilan sa RFC7807) koji se koristi i u API sloju i kroz globalni exception handler (`UseDomainExceptionHandling`).

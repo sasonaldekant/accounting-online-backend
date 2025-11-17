@@ -12,6 +12,6 @@ namespace ERPAccounting.Application.Services
         Task<DocumentLineItemDto?> GetAsync(int documentId, int itemId);
         Task<DocumentLineItemDto> CreateAsync(int documentId, CreateLineItemDto dto);
         Task<DocumentLineItemDto> UpdateAsync(int documentId, int itemId, byte[] expectedRowVersion, PatchLineItemDto dto);
-        Task<bool> DeleteAsync(int documentId, int itemId);
+        Task DeleteAsync(int documentId, int itemId);
     }
 }
