@@ -1,7 +1,12 @@
+using ERPAccounting.Application.DTOs;
+using ERPAccounting.Common.Constants;
+using ERPAccounting.Common.Exceptions;
+using ERPAccounting.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ERPAccounting.Application.Services;
-using ERPAccounting.Application.DTOs;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Net;
 
 namespace ERPAccounting.API.Controllers
 {
@@ -10,7 +15,7 @@ namespace ERPAccounting.API.Controllers
     /// Koristi 11 Stored Procedures iz baze
     /// </summary>
     [ApiController]
-    [Route("api/v1/lookups")]
+    [Route(ApiRoutes.Lookups.Base)]
     [Authorize]
     public class LookupsController : ControllerBase
     {
@@ -25,249 +30,98 @@ namespace ERPAccounting.API.Controllers
             _logger = logger;
         }
 
-        // ══════════════════════════════════════════════════
-        // SP 1: spPartnerComboStatusNabavka
-        /// <summary>
-        /// GET /api/v1/lookups/partners
-        /// Vraća sve partnere za nabavke
-        /// </summary>
-        [HttpGet("partners")]
+        [HttpGet(ApiRoutes.Lookups.Partners)]
         [ProducesResponseType(typeof(List<PartnerComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<PartnerComboDto>>> GetPartners()
-        {
-            try
+        public Task<ActionResult<List<PartnerComboDto>>> GetPartners()
+            => ExecuteLookupAsync(async () =>
             {
                 var result = await _lookupService.GetPartnerComboAsync();
                 _logger.LogInformation("Partners loaded: {Count}", result.Count);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading partners");
-                return StatusCode(500, new { message = "Greška pri učitavanju partnera" });
-            }
-        }
+                return result;
+            }, "partnera");
 
-        // ══════════════════════════════════════════════════
-        // SP 2: spOrganizacionaJedinicaCombo
-        /// <summary>
-        /// GET /api/v1/lookups/organizational-units?docTypeId=UR
-        /// Vraća organizacione jedinice za određenu vrstu dokumenta
-        /// </summary>
-        [HttpGet("organizational-units")]
+        [HttpGet(ApiRoutes.Lookups.OrganizationalUnits)]
         [ProducesResponseType(typeof(List<OrgUnitComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<OrgUnitComboDto>>> GetOrgUnits([FromQuery] string? docTypeId = null)
-        {
-            try
+        public Task<ActionResult<List<OrgUnitComboDto>>> GetOrgUnits([FromQuery] string? docTypeId = null)
+            => ExecuteLookupAsync(async () =>
             {
-                docTypeId = docTypeId ?? "UR"; // Default
-                var result = await _lookupService.GetOrgUnitsComboAsync(docTypeId);
+                docTypeId ??= "UR";
+                var result = await _spService.GetOrgUnitsComboAsync(docTypeId);
                 _logger.LogInformation("Organizational units loaded for {DocType}: {Count}", docTypeId, result.Count);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading organizational units");
-                return StatusCode(500, new { message = "Greška pri učitavanju org. jedinica" });
-            }
-        }
+                return result;
+            }, "organizacionih jedinica");
 
-        // ══════════════════════════════════════════════════
-        // SP 3: spNacinOporezivanjaComboNabavka
-        /// <summary>
-        /// GET /api/v1/lookups/taxation-methods
-        /// Vraća sve načine oporezivanja
-        /// </summary>
-        [HttpGet("taxation-methods")]
+        [HttpGet(ApiRoutes.Lookups.TaxationMethods)]
         [ProducesResponseType(typeof(List<TaxationMethodComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<TaxationMethodComboDto>>> GetTaxationMethods()
-        {
-            try
-            {
-                var result = await _lookupService.GetTaxationMethodsComboAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading taxation methods");
-                return StatusCode(500, new { message = "Greška pri učitavanju načina oporezivanja" });
-            }
-        }
+        public Task<ActionResult<List<TaxationMethodComboDto>>> GetTaxationMethods()
+            => ExecuteLookupAsync(_spService.GetTaxationMethodsComboAsync, "načina oporezivanja");
 
-        // ══════════════════════════════════════════════════
-        // SP 4: spReferentCombo
-        /// <summary>
-        /// GET /api/v1/lookups/referents
-        /// Vraća sve referente (zaposlene)
-        /// </summary>
-        [HttpGet("referents")]
+        [HttpGet(ApiRoutes.Lookups.Referents)]
         [ProducesResponseType(typeof(List<ReferentComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<ReferentComboDto>>> GetReferents()
-        {
-            try
-            {
-                var result = await _lookupService.GetReferentsComboAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading referents");
-                return StatusCode(500, new { message = "Greška pri učitavanju referenata" });
-            }
-        }
+        public Task<ActionResult<List<ReferentComboDto>>> GetReferents()
+            => ExecuteLookupAsync(_spService.GetReferentsComboAsync, "referenata");
 
-        // ══════════════════════════════════════════════════
-        // SP 5: spDokumentNDCombo
-        /// <summary>
-        /// GET /api/v1/lookups/documents-nd
-        /// Vraća sve ND dokumente kao referentne
-        /// </summary>
-        [HttpGet("documents-nd")]
+        [HttpGet(ApiRoutes.Lookups.DocumentsNd)]
         [ProducesResponseType(typeof(List<DocumentNDComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<DocumentNDComboDto>>> GetDocumentsND()
-        {
-            try
-            {
-                var result = await _lookupService.GetDocumentNDComboAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading ND documents");
-                return StatusCode(500, new { message = "Greška pri učitavanju ND dokumenata" });
-            }
-        }
+        public Task<ActionResult<List<DocumentNDComboDto>>> GetDocumentsND()
+            => ExecuteLookupAsync(_spService.GetDocumentNDComboAsync, "ND dokumenata");
 
-        // ══════════════════════════════════════════════════
-        // SP 6: spPoreskaStopaCombo
-        /// <summary>
-        /// GET /api/v1/lookups/tax-rates
-        /// Vraća sve poreske stope
-        /// </summary>
-        [HttpGet("tax-rates")]
+        [HttpGet(ApiRoutes.Lookups.TaxRates)]
         [ProducesResponseType(typeof(List<TaxRateComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<TaxRateComboDto>>> GetTaxRates()
-        {
-            try
-            {
-                var result = await _lookupService.GetTaxRatesComboAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading tax rates");
-                return StatusCode(500, new { message = "Greška pri učitavanju poreskih stopa" });
-            }
-        }
+        public Task<ActionResult<List<TaxRateComboDto>>> GetTaxRates()
+            => ExecuteLookupAsync(_spService.GetTaxRatesComboAsync, "poreskih stopa");
 
-        // ══════════════════════════════════════════════════
-        // SP 7: spArtikalComboUlaz
-        /// <summary>
-        /// GET /api/v1/lookups/articles
-        /// Vraća sve artikle za nabavke
-        /// </summary>
-        [HttpGet("articles")]
+        [HttpGet(ApiRoutes.Lookups.Articles)]
         [ProducesResponseType(typeof(List<ArticleComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<ArticleComboDto>>> GetArticles()
-        {
-            try
-            {
-                var result = await _lookupService.GetArticlesComboAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading articles");
-                return StatusCode(500, new { message = "Greška pri učitavanju artikala" });
-            }
-        }
+        public Task<ActionResult<List<ArticleComboDto>>> GetArticles()
+            => ExecuteLookupAsync(_spService.GetArticlesComboAsync, "artikala");
 
-        // ══════════════════════════════════════════════════
-        // SP 8: spDokumentTroskoviLista
-        /// <summary>
-        /// GET /api/v1/lookups/document-costs/{documentId}
-        /// Vraća sve troškove za određeni dokument
-        /// </summary>
-        [HttpGet("document-costs/{documentId:int}")]
+        [HttpGet(ApiRoutes.Lookups.DocumentCosts)]
         [ProducesResponseType(typeof(List<DocumentCostsListDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<DocumentCostsListDto>>> GetDocumentCosts(int documentId)
-        {
-            try
-            {
-                var result = await _lookupService.GetDocumentCostsListAsync(documentId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading document costs for {DocumentId}", documentId);
-                return StatusCode(500, new { message = "Greška pri učitavanju troškova" });
-            }
-        }
+        public Task<ActionResult<List<DocumentCostsListDto>>> GetDocumentCosts(int documentId)
+            => ExecuteLookupAsync(() => _spService.GetDocumentCostsListAsync(documentId), "troškova");
 
-        // ══════════════════════════════════════════════════
-        // SP 9: spUlazniRacuniIzvedeniTroskoviCombo
-        /// <summary>
-        /// GET /api/v1/lookups/cost-types
-        /// Vraća sve vrste troškova
-        /// </summary>
-        [HttpGet("cost-types")]
+        [HttpGet(ApiRoutes.Lookups.CostTypes)]
         [ProducesResponseType(typeof(List<CostTypeComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<CostTypeComboDto>>> GetCostTypes()
-        {
-            try
-            {
-                var result = await _lookupService.GetCostTypesComboAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading cost types");
-                return StatusCode(500, new { message = "Greška pri učitavanju vrsta troškova" });
-            }
-        }
+        public Task<ActionResult<List<CostTypeComboDto>>> GetCostTypes()
+            => ExecuteLookupAsync(_spService.GetCostTypesComboAsync, "vrsta troškova");
 
-        // ══════════════════════════════════════════════════
-        // SP 10: spNacinDeljenjaTroskovaCombo
-        /// <summary>
-        /// GET /api/v1/lookups/cost-distribution-methods
-        /// Vraća sve načine raspoređivanja troškova (1, 2, 3)
-        /// </summary>
-        [HttpGet("cost-distribution-methods")]
+        [HttpGet(ApiRoutes.Lookups.CostDistributionMethods)]
         [ProducesResponseType(typeof(List<CostDistributionMethodComboDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<CostDistributionMethodComboDto>>> GetCostDistributionMethods()
         {
-            try
-            {
-                var result = await _lookupService.GetCostDistributionMethodsComboAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading cost distribution methods");
-                return StatusCode(500, new { message = "Greška pri učitavanju načina raspoređivanja" });
-            }
+            var result = await _spService.GetCostDistributionMethodsComboAsync();
+            return Ok(result);
         }
 
-        // ══════════════════════════════════════════════════
-        // SP 11: spDokumentTroskoviArtikliCOMBO
-        /// <summary>
-        /// GET /api/v1/lookups/cost-articles/{documentId}
-        /// Vraća sve artikle iz stavki dokumenta za raspoređivanje troškova
-        /// </summary>
-        [HttpGet("cost-articles/{documentId:int}")]
+        [HttpGet(ApiRoutes.Lookups.CostArticles)]
         [ProducesResponseType(typeof(List<CostArticleComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<CostArticleComboDto>>> GetCostArticles(int documentId)
+        public Task<ActionResult<List<CostArticleComboDto>>> GetCostArticles(int documentId)
+            => ExecuteLookupAsync(() => _spService.GetCostArticlesComboAsync(documentId), "artikala za troškove");
+
+        private async Task<ActionResult<List<T>>> ExecuteLookupAsync<T>(Func<Task<List<T>>> action, string resourceName)
         {
             try
             {
-                var result = await _lookupService.GetCostArticlesComboAsync(documentId);
+                var result = await action();
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading cost articles for {DocumentId}", documentId);
-                return StatusCode(500, new { message = "Greška pri učitavanju artikala za troškove" });
+                _logger.LogError(ex, "Error loading {Resource}", resourceName);
+                throw CreateLookupException(resourceName, ex);
             }
+        }
+
+        private static DomainException CreateLookupException(string resourceName, Exception innerException)
+        {
+            var detail = string.Format(CultureInfo.InvariantCulture, ErrorMessages.LookupLoadFailed, resourceName);
+            return new DomainException(
+                HttpStatusCode.InternalServerError,
+                ErrorMessages.LookupErrorTitle,
+                detail,
+                ErrorCodes.LookupFailed,
+                innerException: innerException);
         }
     }
 }

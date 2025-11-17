@@ -3,7 +3,8 @@ using ERPAccounting.Application.DTOs;
 using ERPAccounting.Application.DTOs.LineItems;
 using ERPAccounting.Application.Services;
 using ERPAccounting.Application.Validators;
-using ERPAccounting.Infrastructure.Data;
+using ERPAccounting.Common.Extensions;
+using ERPAccounting.Infrastructure.Services;
 using FluentValidation;
 using ERPAccounting.Infrastructure.Services;
 
@@ -24,6 +25,8 @@ builder.Services.AddScoped<IValidator<PatchLineItemDto>, PatchLineItemValidator>
 builder.Services.AddScoped<IStoredProcedureService, StoredProcedureService>();
 
 var app = builder.Build();
+
+app.UseDomainExceptionHandling();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
