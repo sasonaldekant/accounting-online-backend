@@ -36,6 +36,24 @@ namespace ERPAccounting.Infrastructure.Data
             // Soft delete filter - sve query-je će filtrirati obrisane
             documentEntity.HasQueryFilter(e => !e.IsDeleted);
 
+            documentEntity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            documentEntity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            documentEntity.Property(e => e.CreatedBy)
+                .HasColumnType("int");
+
+            documentEntity.Property(e => e.UpdatedBy)
+                .HasColumnType("int");
+
+            documentEntity.Property(e => e.IsDeleted)
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
+
             // RowVersion za konkurentnost - OBAVEZNO!
             documentEntity.Property(e => e.DokumentTimeStamp)
                 .IsRowVersion()
@@ -60,6 +78,24 @@ namespace ERPAccounting.Infrastructure.Data
 
             // Soft delete filter
             lineItemEntity.HasQueryFilter(e => !e.IsDeleted);
+
+            lineItemEntity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            lineItemEntity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            lineItemEntity.Property(e => e.CreatedBy)
+                .HasColumnType("int");
+
+            lineItemEntity.Property(e => e.UpdatedBy)
+                .HasColumnType("int");
+
+            lineItemEntity.Property(e => e.IsDeleted)
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
 
             // RowVersion za konkurentnost - OBAVEZNO!
             lineItemEntity.Property(e => e.StavkaDokumentaTimeStamp)

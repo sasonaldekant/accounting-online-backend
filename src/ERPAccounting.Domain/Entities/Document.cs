@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ERPAccounting.Domain.Entities;
 
 [Table("tblDokument")]
-public class Document
+public class Document : BaseEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

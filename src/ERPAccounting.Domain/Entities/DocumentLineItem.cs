@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ERPAccounting.Domain.Entities;
 
 [Table("tblStavkaDokumenta")]
-public class DocumentLineItem
+public class DocumentLineItem : BaseEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
