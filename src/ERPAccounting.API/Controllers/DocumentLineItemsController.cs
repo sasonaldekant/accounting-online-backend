@@ -1,9 +1,10 @@
+using ERPAccounting.Application.DTOs;
+using ERPAccounting.Application.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ERPAccounting.Infrastructure.Data;
-using ERPAccounting.Domain.Entities;
-using ERPAccounting.Application.DTOs;
+using System.Linq;
 
 namespace ERPAccounting.API.Controllers
 {
@@ -27,14 +28,14 @@ namespace ERPAccounting.API.Controllers
     [Authorize]
     public class DocumentLineItemsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDocumentLineItemService _service;
         private readonly ILogger<DocumentLineItemsController> _logger;
 
         public DocumentLineItemsController(
-            AppDbContext context,
+            IDocumentLineItemService service,
             ILogger<DocumentLineItemsController> logger)
         {
-            _context = context;
+            _service = service;
             _logger = logger;
         }
 
@@ -51,33 +52,8 @@ namespace ERPAccounting.API.Controllers
         {
             try
             {
-                var items = await _context.DocumentLineItems
-                    .Where(i => i.IDDokument == documentId && !i.IsDeleted)
-                    .ToListAsync();
-
-                var dtos = items.Select(i => new DocumentLineItemDto(
-                    Id: i.IDStavkaDokumenta,
-                    DocumentId: i.IDDokument,
-                    ArticleId: i.IDArtikal,
-                    Quantity: i.Kolicina,
-                    InvoicePrice: i.FakturnaCena,
-                    DiscountAmount: i.RabatDokument,
-                    MarginAmount: i.Marza,
-                    TaxRateId: i.IDPoreskaStopa,
-                    TaxPercent: i.ProcenatPoreza,
-                    TaxAmount: i.IznosPDV,
-                    Total: i.Iznos,
-                    CalculateExcise: i.ObracunAkciza == 1,
-                    CalculateTax: i.ObracunPorez == 1,
-                    Description: i.Opis,
-                    ETag: Convert.ToBase64String(i.StavkaDokumentaTimeStamp),
-                    CreatedAt: i.CreatedAt,
-                    UpdatedAt: i.UpdatedAt,
-                    CreatedBy: i.CreatedBy,
-                    UpdatedBy: i.UpdatedBy
-                )).ToList();
-
-                return Ok(dtos);
+                var items = await _service.GetItemsAsync(documentId);
+                return Ok(items);
             }
             catch (Exception ex)
             {
@@ -98,41 +74,13 @@ namespace ERPAccounting.API.Controllers
         {
             try
             {
-                var item = await _context.DocumentLineItems
-                    .FirstOrDefaultAsync(i => i.IDStavkaDokumenta == itemId && i.IDDokument == documentId && !i.IsDeleted);
+                var item = await _service.GetAsync(documentId, itemId);
 
                 if (item == null)
                     return NotFound(new { message = "Stavka nije pronađena" });
 
-                // ══════════════════════════════════════════════════
-                // OBAVEZNO: ETag u response header-u
-                var etag = Convert.ToBase64String(item.StavkaDokumentaTimeStamp);
-                Response.Headers.Add("ETag", $"\"{etag}\"");
-                // ══════════════════════════════════════════════════
-
-                var dto = new DocumentLineItemDto(
-                    Id: item.IDStavkaDokumenta,
-                    DocumentId: item.IDDokument,
-                    ArticleId: item.IDArtikal,
-                    Quantity: item.Kolicina,
-                    InvoicePrice: item.FakturnaCena,
-                    DiscountAmount: item.RabatDokument,
-                    MarginAmount: item.Marza,
-                    TaxRateId: item.IDPoreskaStopa,
-                    TaxPercent: item.ProcenatPoreza,
-                    TaxAmount: item.IznosPDV,
-                    Total: item.Iznos,
-                    CalculateExcise: item.ObracunAkciza == 1,
-                    CalculateTax: item.ObracunPorez == 1,
-                    Description: item.Opis,
-                    ETag: etag,
-                    CreatedAt: item.CreatedAt,
-                    UpdatedAt: item.UpdatedAt,
-                    CreatedBy: item.CreatedBy,
-                    UpdatedBy: item.UpdatedBy
-                );
-
-                return Ok(dto);
+                Response.Headers["ETag"] = $"\"{item.ETag}\"";
+                return Ok(item);
             }
             catch (Exception ex)
             {
@@ -155,55 +103,18 @@ namespace ERPAccounting.API.Controllers
         {
             try
             {
-                // Proveri dokument
-                var doc = await _context.Documents.FindAsync(documentId);
-                if (doc == null)
-                    return NotFound(new { message = "Dokument nije pronađen" });
-
-                // Kreiraj stavku
-                var item = new DocumentLineItem
-                {
-                    IDDokument = documentId,
-                    IDArtikal = dto.ArticleId,
-                    Kolicina = dto.Quantity,
-                    FakturnaCena = dto.InvoicePrice,
-                    RabatDokument = dto.DiscountAmount ?? 0,
-                    Marza = dto.MarginAmount ?? 0,
-                    IDPoreskaStopa = dto.TaxRateId,
-                    ObracunAkciza = (short)(dto.CalculateExcise ? 1 : 0),
-                    ObracunPorez = (short)(dto.CalculateTax ? 1 : 0),
-                    Opis = dto.Description
-                };
-
-                _context.DocumentLineItems.Add(item);
-                await _context.SaveChangesAsync();
-
-                var etag = Convert.ToBase64String(item.StavkaDokumentaTimeStamp);
-                Response.Headers.Add("ETag", $"\"{etag}\"");
-
-                var responseDto = new DocumentLineItemDto(
-                    Id: item.IDStavkaDokumenta,
-                    DocumentId: item.IDDokument,
-                    ArticleId: item.IDArtikal,
-                    Quantity: item.Kolicina,
-                    InvoicePrice: item.FakturnaCena,
-                    DiscountAmount: item.RabatDokument,
-                    MarginAmount: item.Marza,
-                    TaxRateId: item.IDPoreskaStopa,
-                    TaxPercent: 0,
-                    TaxAmount: 0,
-                    Total: item.Iznos,
-                    CalculateExcise: item.ObracunAkciza == 1,
-                    CalculateTax: item.ObracunPorez == 1,
-                    Description: item.Opis,
-                    ETag: etag,
-                    CreatedAt: item.CreatedAt,
-                    UpdatedAt: item.UpdatedAt,
-                    CreatedBy: item.CreatedBy,
-                    UpdatedBy: item.UpdatedBy
-                );
-
-                return CreatedAtAction(nameof(GetItem), new { documentId, itemId = item.IDStavkaDokumenta }, responseDto);
+                var created = await _service.CreateAsync(documentId, dto);
+                Response.Headers["ETag"] = $"\"{created.ETag}\"";
+                return CreatedAtAction(nameof(GetItem), new { documentId, itemId = created.Id }, created);
+            }
+            catch (ValidationException ex)
+            {
+                _logger.LogWarning(ex, "Validation error while creating item for document {DocumentId}", documentId);
+                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Dokument nije pronađen" });
             }
             catch (Exception ex)
             {
@@ -238,124 +149,29 @@ namespace ERPAccounting.API.Controllers
         {
             try
             {
-                // ══════════════════════════════════════════════════
-                // OBAVEZNO: Proveri If-Match header
-                var ifMatch = Request.Headers["If-Match"].FirstOrDefault();
-                if (string.IsNullOrEmpty(ifMatch))
+                var expectedRowVersion = ExtractRowVersionFromIfMatch();
+                if (expectedRowVersion == null)
                 {
-                    _logger.LogWarning("Missing If-Match header for PATCH");
-                    return BadRequest(new { message = "Missing If-Match header (ETag required)" });
+                    return BadRequest(new { message = "Missing or invalid If-Match header" });
                 }
 
-                // Dekoduj Base64 ETag u RowVersion
-                byte[] expectedRowVersion;
-                try
-                {
-                    // Ukloni navodike ako postoje
-                    var etagValue = ifMatch.Trim('"');
-                    expectedRowVersion = Convert.FromBase64String(etagValue);
-                }
-                catch
-                {
-                    _logger.LogWarning("Invalid ETag format: {ETag}", ifMatch);
-                    return BadRequest(new { message = "Invalid ETag format" });
-                }
-                // ══════════════════════════════════════════════════
-
-                // Pronađi stavku
-                var item = await _context.DocumentLineItems
-                    .FirstOrDefaultAsync(i => i.IDStavkaDokumenta == itemId && i.IDDokument == documentId && !i.IsDeleted);
-
-                if (item == null)
-                    return NotFound(new { message = "Stavka nije pronađena" });
-
-                // ══════════════════════════════════════════════════
-                // KRITIČNO: KONKURENTNOST PROVERA!
-                // Ako RowVersion ne odgovara -> 409 Conflict
-                if (!item.StavkaDokumentaTimeStamp.SequenceEqual(expectedRowVersion))
-                {
-                    _logger.LogWarning(
-                        "Concurrency conflict for item {ItemId}: expected={Expected}, actual={Actual}",
-                        itemId,
-                        Convert.ToBase64String(expectedRowVersion),
-                        Convert.ToBase64String(item.StavkaDokumentaTimeStamp)
-                    );
-
-                    // 409 Conflict
-                    return Conflict(new
-                    {
-                        message = "Stavka je promenjena od drugog korisnika",
-                        detail = "Osvežite stranicu ili izaberite opciju 'Prepiši'",
-                        currentETag = Convert.ToBase64String(item.StavkaDokumentaTimeStamp),
-                        timestamp = DateTime.UtcNow
-                    });
-                }
-                // ══════════════════════════════════════════════════
-
-                // Ažuriramo samo polja koja su prosleđena
-                if (dto.Quantity.HasValue)
-                    item.Kolicina = dto.Quantity.Value;
-
-                if (dto.InvoicePrice.HasValue)
-                    item.FakturnaCena = dto.InvoicePrice.Value;
-
-                if (dto.DiscountAmount.HasValue)
-                    item.RabatDokument = dto.DiscountAmount.Value;
-
-                if (dto.MarginAmount.HasValue)
-                    item.Marza = dto.MarginAmount.Value;
-
-                if (dto.TaxRateId != null)
-                    item.IDPoreskaStopa = dto.TaxRateId;
-
-                if (dto.CalculateExcise.HasValue)
-                    item.ObracunAkciza = (short)(dto.CalculateExcise.Value ? 1 : 0);
-
-                if (dto.CalculateTax.HasValue)
-                    item.ObracunPorez = (short)(dto.CalculateTax.Value ? 1 : 0);
-
-                if (dto.Description != null)
-                    item.Opis = dto.Description;
-
-                item.UpdatedAt = DateTime.UtcNow;
-
-                // SaveChanges će automatski ažurirati RowVersion!
-                await _context.SaveChangesAsync();
-
-                // ══════════════════════════════════════════════════
-                // OBAVEZNO: Novi ETag u response!
-                var newETag = Convert.ToBase64String(item.StavkaDokumentaTimeStamp);
-                Response.Headers.Add("ETag", $"\"{newETag}\"");
-                // ══════════════════════════════════════════════════
-
-                var responseDto = new DocumentLineItemDto(
-                    Id: item.IDStavkaDokumenta,
-                    DocumentId: item.IDDokument,
-                    ArticleId: item.IDArtikal,
-                    Quantity: item.Kolicina,
-                    InvoicePrice: item.FakturnaCena,
-                    DiscountAmount: item.RabatDokument,
-                    MarginAmount: item.Marza,
-                    TaxRateId: item.IDPoreskaStopa,
-                    TaxPercent: item.ProcenatPoreza,
-                    TaxAmount: item.IznosPDV,
-                    Total: item.Iznos,
-                    CalculateExcise: item.ObracunAkciza == 1,
-                    CalculateTax: item.ObracunPorez == 1,
-                    Description: item.Opis,
-                    ETag: newETag,
-                    CreatedAt: item.CreatedAt,
-                    UpdatedAt: item.UpdatedAt,
-                    CreatedBy: item.CreatedBy,
-                    UpdatedBy: item.UpdatedBy
-                );
-
-                return Ok(responseDto);
+                var updated = await _service.UpdateAsync(documentId, itemId, expectedRowVersion, dto);
+                Response.Headers["ETag"] = $"\"{updated.ETag}\"";
+                return Ok(updated);
             }
-            catch (DbUpdateException ex)
+            catch (ValidationException ex)
             {
-                _logger.LogError(ex, "Database error updating item {ItemId}", itemId);
-                return StatusCode(500, new { message = "Greška pri ažuriranju stavke" });
+                _logger.LogWarning(ex, "Validation error while updating item {ItemId}", itemId);
+                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                _logger.LogWarning("Concurrency conflict for item {ItemId}", itemId);
+                return Conflict(new { message = "Stavka je promenjena od drugog korisnika" });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Stavka nije pronađena" });
             }
             catch (Exception ex)
             {
@@ -378,22 +194,34 @@ namespace ERPAccounting.API.Controllers
         {
             try
             {
-                var item = await _context.DocumentLineItems
-                    .FirstOrDefaultAsync(i => i.IDStavkaDokumenta == itemId && i.IDDokument == documentId && !i.IsDeleted);
-
-                if (item == null)
-                    return NotFound();
-
-                // Soft delete
-                item.IsDeleted = true;
-                await _context.SaveChangesAsync();
-
-                return NoContent();
+                var deleted = await _service.DeleteAsync(documentId, itemId);
+                return deleted ? NoContent() : NotFound();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting item {ItemId}", itemId);
                 return StatusCode(500, new { message = "Greška pri brisanju stavke" });
+            }
+        }
+
+        private byte[]? ExtractRowVersionFromIfMatch()
+        {
+            var ifMatch = Request.Headers["If-Match"].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(ifMatch))
+            {
+                _logger.LogWarning("Missing If-Match header for PATCH");
+                return null;
+            }
+
+            try
+            {
+                var etagValue = ifMatch.Trim('"');
+                return Convert.FromBase64String(etagValue);
+            }
+            catch (FormatException ex)
+            {
+                _logger.LogWarning(ex, "Invalid ETag format: {ETag}", ifMatch);
+                return null;
             }
         }
     }
