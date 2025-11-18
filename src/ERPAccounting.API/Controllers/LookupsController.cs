@@ -57,27 +57,27 @@ namespace ERPAccounting.API.Controllers
         [HttpGet(ApiRoutes.Lookups.TaxationMethods)]
         [ProducesResponseType(typeof(List<TaxationMethodComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<TaxationMethodComboDto>>> GetTaxationMethods()
-            => ExecuteLookupAsync(_spService.GetTaxationMethodsComboAsync, "načina oporezivanja");
+            => ExecuteLookupAsync<TaxationMethodComboDto>(_spService.GetTaxationMethodsComboAsync, "načina oporezivanja");
 
         [HttpGet(ApiRoutes.Lookups.Referents)]
         [ProducesResponseType(typeof(List<ReferentComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<ReferentComboDto>>> GetReferents()
-            => ExecuteLookupAsync(_spService.GetReferentsComboAsync, "referenata");
+            => ExecuteLookupAsync<ReferentComboDto>(_spService.GetReferentsComboAsync, "referenata");
 
         [HttpGet(ApiRoutes.Lookups.DocumentsNd)]
         [ProducesResponseType(typeof(List<DocumentNDComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<DocumentNDComboDto>>> GetDocumentsND()
-            => ExecuteLookupAsync(_spService.GetDocumentNDComboAsync, "ND dokumenata");
+            => ExecuteLookupAsync<DocumentNDComboDto>(_spService.GetDocumentNDComboAsync, "ND dokumenata");
 
         [HttpGet(ApiRoutes.Lookups.TaxRates)]
         [ProducesResponseType(typeof(List<TaxRateComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<TaxRateComboDto>>> GetTaxRates()
-            => ExecuteLookupAsync(_spService.GetTaxRatesComboAsync, "poreskih stopa");
+            => ExecuteLookupAsync<TaxRateComboDto>(_spService.GetTaxRatesComboAsync, "poreskih stopa");
 
         [HttpGet(ApiRoutes.Lookups.Articles)]
         [ProducesResponseType(typeof(List<ArticleComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<ArticleComboDto>>> GetArticles()
-            => ExecuteLookupAsync(_spService.GetArticlesComboAsync, "artikala");
+            => ExecuteLookupAsync<ArticleComboDto>(_spService.GetArticlesComboAsync, "artikala");
 
         [HttpGet(ApiRoutes.Lookups.DocumentCosts)]
         [ProducesResponseType(typeof(List<DocumentCostsListDto>), StatusCodes.Status200OK)]
@@ -87,7 +87,7 @@ namespace ERPAccounting.API.Controllers
         [HttpGet(ApiRoutes.Lookups.CostTypes)]
         [ProducesResponseType(typeof(List<CostTypeComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<CostTypeComboDto>>> GetCostTypes()
-            => ExecuteLookupAsync(_spService.GetCostTypesComboAsync, "vrsta troškova");
+            => ExecuteLookupAsync<CostTypeComboDto>(_spService.GetCostTypesComboAsync, "vrsta troškova");
 
         [HttpGet(ApiRoutes.Lookups.CostDistributionMethods)]
         [ProducesResponseType(typeof(List<CostDistributionMethodComboDto>), StatusCodes.Status200OK)]
