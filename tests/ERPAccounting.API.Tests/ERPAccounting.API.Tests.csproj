@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\src\ERPAccounting.API\ERPAccounting.API.csproj" />
     <ProjectReference Include="..\..\src\ERPAccounting.Domain\ERPAccounting.Domain.csproj" />
     <ProjectReference Include="..\..\src\ERPAccounting.Common\ERPAccounting.Common.csproj" />
+    <ProjectReference Include="..\..\src\ERPAccounting.Infrastructure\ERPAccounting.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
