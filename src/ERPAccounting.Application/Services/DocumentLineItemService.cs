@@ -191,7 +191,7 @@ namespace ERPAccounting.Application.Services
                         group => group.Key,
                         group => group.Select(failure => failure.ErrorMessage).ToArray());
 
-                throw new ValidationException(ErrorMessages.ValidationFailed, errors);
+                throw new Common.Exceptions.ValidationException(ErrorMessages.ValidationFailed, errors);
             }
         }
 

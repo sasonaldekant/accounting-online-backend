@@ -153,7 +153,23 @@ namespace ERPAccounting.Infrastructure.Data
             // Soft delete filter
             costEntity.HasQueryFilter(e => !e.IsDeleted);
 
-            ConfigureAuditColumns(costEntity);
+            costEntity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            costEntity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            costEntity.Property(e => e.CreatedBy)
+                .HasColumnType("int");
+
+            costEntity.Property(e => e.UpdatedBy)
+                .HasColumnType("int");
+
+            costEntity.Property(e => e.IsDeleted)
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
 
             // RowVersion za konkurentnost
             costEntity.Property(e => e.DokumentTroskoviTimeStamp)
@@ -180,7 +196,23 @@ namespace ERPAccounting.Infrastructure.Data
             // Soft delete filter
             costLineItemEntity.HasQueryFilter(e => !e.IsDeleted);
 
-            ConfigureAuditColumns(costLineItemEntity);
+            costLineItemEntity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            costLineItemEntity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            costLineItemEntity.Property(e => e.CreatedBy)
+                .HasColumnType("int");
+
+            costLineItemEntity.Property(e => e.UpdatedBy)
+                .HasColumnType("int");
+
+            costLineItemEntity.Property(e => e.IsDeleted)
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
 
             // RowVersion za konkurentnost - OBAVEZNO!
             costLineItemEntity.Property(e => e.DokumentTroskoviStavkaTimeStamp)
