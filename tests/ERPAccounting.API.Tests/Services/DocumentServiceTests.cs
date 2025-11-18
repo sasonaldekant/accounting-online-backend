@@ -14,6 +14,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
+using ValidationException = ERPAccounting.Common.Exceptions.ValidationException;
+
 namespace ERPAccounting.API.Tests.Services;
 
 public class DocumentServiceTests
