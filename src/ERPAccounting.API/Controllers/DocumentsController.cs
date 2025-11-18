@@ -1,4 +1,5 @@
 using System.Linq;
+using ERPAccounting.API.Helpers;
 using ERPAccounting.Application.DTOs;
 using ERPAccounting.Application.DTOs.Documents;
 using ERPAccounting.Application.Services;
@@ -77,13 +78,17 @@ namespace ERPAccounting.API.Controllers
         {
             try
             {
-                var expectedRowVersion = ExtractRowVersionFromIfMatch();
-                if (expectedRowVersion == null)
+                if (!IfMatchHeaderParser.TryExtractRowVersion(
+                        HttpContext,
+                        _logger,
+                        "document update",
+                        out var expectedRowVersion,
+                        out var problemDetails))
                 {
-                    return BadRequest(new { message = "Missing or invalid If-Match header" });
+                    return BadRequest(problemDetails);
                 }
 
-                var updated = await _documentService.UpdateDocumentAsync(documentId, expectedRowVersion, dto);
+                var updated = await _documentService.UpdateDocumentAsync(documentId, expectedRowVersion!, dto);
                 Response.Headers["ETag"] = $"\"{updated.ETag}\"";
                 return Ok(updated);
             }
@@ -111,24 +116,5 @@ namespace ERPAccounting.API.Controllers
             return deleted ? NoContent() : NotFound(new { message = "Dokument nije pronađen" });
         }
 
-        private byte[]? ExtractRowVersionFromIfMatch()
-        {
-            var ifMatch = Request.Headers["If-Match"].FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(ifMatch))
-            {
-                _logger.LogWarning("Missing If-Match header for document update");
-                return null;
-            }
-
-            try
-            {
-                return Convert.FromBase64String(ifMatch.Trim('"'));
-            }
-            catch (FormatException ex)
-            {
-                _logger.LogWarning(ex, "Invalid document ETag format: {IfMatch}", ifMatch);
-                return null;
-            }
-        }
     }
 }
