@@ -7,7 +7,7 @@ namespace ERPAccounting.Application.Services
     /// Servis koji orkestrira sve lookup pozive ka bazi preko gateway-a
     /// kako bi se zadržala čista aplikaciona logika bez EF Core zavisnosti.
     /// </summary>
-    public class StoredProcedureService : ILookupService
+    public class StoredProcedureService : IStoredProcedureService
     {
         private readonly IStoredProcedureGateway _gateway;
 

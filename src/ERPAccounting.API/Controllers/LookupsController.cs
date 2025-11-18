@@ -1,4 +1,5 @@
 using ERPAccounting.Application.DTOs;
+using ERPAccounting.Application.Services;
 using ERPAccounting.Common.Constants;
 using ERPAccounting.Common.Exceptions;
 using ERPAccounting.Application.Services;
@@ -19,14 +20,14 @@ namespace ERPAccounting.API.Controllers
     [Authorize]
     public class LookupsController : ControllerBase
     {
-        private readonly ILookupService _lookupService;
+        private readonly IStoredProcedureService _storedProcedureService;
         private readonly ILogger<LookupsController> _logger;
 
         public LookupsController(
-            ILookupService lookupService,
+            IStoredProcedureService storedProcedureService,
             ILogger<LookupsController> logger)
         {
-            _lookupService = lookupService;
+            _storedProcedureService = storedProcedureService;
             _logger = logger;
         }
 
@@ -35,7 +36,7 @@ namespace ERPAccounting.API.Controllers
         public Task<ActionResult<List<PartnerComboDto>>> GetPartners()
             => ExecuteLookupAsync(async () =>
             {
-                var result = await _lookupService.GetPartnerComboAsync();
+                var result = await _storedProcedureService.GetPartnerComboAsync();
                 _logger.LogInformation("Partners loaded: {Count}", result.Count);
                 return result;
             }, "partnera");
