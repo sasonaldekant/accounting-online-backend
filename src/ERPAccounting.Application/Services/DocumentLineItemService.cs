@@ -1,7 +1,5 @@
 using ERPAccounting.Application.DTOs;
-using ERPAccounting.Application.Services.Contracts;
-using ERPAccounting.Common.Constants;
-using ERPAccounting.Common.Exceptions;
+using ERPAccounting.Domain.Abstractions.Repositories;
 using ERPAccounting.Domain.Entities;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;

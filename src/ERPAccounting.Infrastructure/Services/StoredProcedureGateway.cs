@@ -1,5 +1,5 @@
-using ERPAccounting.Application.DTOs;
-using ERPAccounting.Application.Services.Contracts;
+using ERPAccounting.Domain.Abstractions.Gateways;
+using ERPAccounting.Domain.Lookups;
 using ERPAccounting.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,12 +17,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         _context = context;
     }
 
-    public async Task<List<PartnerComboDto>> GetPartnerComboAsync()
+    public async Task<List<PartnerLookup>> GetPartnerComboAsync()
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<PartnerComboDto>("EXEC spPartnerComboStatusNabavka")
+                .SqlQueryRaw<PartnerLookup>("EXEC spPartnerComboStatusNabavka")
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -32,12 +32,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<OrgUnitComboDto>> GetOrgUnitsComboAsync(string docTypeId)
+    public async Task<List<OrgUnitLookup>> GetOrgUnitsComboAsync(string docTypeId)
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<OrgUnitComboDto>(
+                .SqlQueryRaw<OrgUnitLookup>(
                     "EXEC spOrganizacionaJedinicaCombo @IDVrstaDokumenta = {0}",
                     docTypeId)
                 .ToListAsync();
@@ -49,12 +49,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<TaxationMethodComboDto>> GetTaxationMethodsComboAsync()
+    public async Task<List<TaxationMethodLookup>> GetTaxationMethodsComboAsync()
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<TaxationMethodComboDto>("EXEC spNacinOporezivanjaComboNabavka")
+                .SqlQueryRaw<TaxationMethodLookup>("EXEC spNacinOporezivanjaComboNabavka")
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -64,12 +64,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<ReferentComboDto>> GetReferentsComboAsync()
+    public async Task<List<ReferentLookup>> GetReferentsComboAsync()
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<ReferentComboDto>("EXEC spReferentCombo")
+                .SqlQueryRaw<ReferentLookup>("EXEC spReferentCombo")
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -79,12 +79,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<DocumentNDComboDto>> GetDocumentNDComboAsync()
+    public async Task<List<DocumentNDLookup>> GetDocumentNDComboAsync()
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<DocumentNDComboDto>("EXEC spDokumentNDCombo")
+                .SqlQueryRaw<DocumentNDLookup>("EXEC spDokumentNDCombo")
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -94,12 +94,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<TaxRateComboDto>> GetTaxRatesComboAsync()
+    public async Task<List<TaxRateLookup>> GetTaxRatesComboAsync()
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<TaxRateComboDto>("EXEC spPoreskaStopaCombo")
+                .SqlQueryRaw<TaxRateLookup>("EXEC spPoreskaStopaCombo")
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -109,12 +109,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<ArticleComboDto>> GetArticlesComboAsync()
+    public async Task<List<ArticleLookup>> GetArticlesComboAsync()
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<ArticleComboDto>("EXEC spArtikalComboUlaz")
+                .SqlQueryRaw<ArticleLookup>("EXEC spArtikalComboUlaz")
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -124,12 +124,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<DocumentCostsListDto>> GetDocumentCostsListAsync(int documentId)
+    public async Task<List<DocumentCostLookup>> GetDocumentCostsListAsync(int documentId)
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<DocumentCostsListDto>(
+                .SqlQueryRaw<DocumentCostLookup>(
                     "EXEC spDokumentTroskoviLista @IDDokument = {0}",
                     documentId)
                 .ToListAsync();
@@ -141,12 +141,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<CostTypeComboDto>> GetCostTypesComboAsync()
+    public async Task<List<CostTypeLookup>> GetCostTypesComboAsync()
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<CostTypeComboDto>("EXEC spUlazniRacuniIzvedeniTroskoviCombo")
+                .SqlQueryRaw<CostTypeLookup>("EXEC spUlazniRacuniIzvedeniTroskoviCombo")
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -156,12 +156,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<CostDistributionMethodComboDto>> GetCostDistributionMethodsComboAsync()
+    public async Task<List<CostDistributionMethodLookup>> GetCostDistributionMethodsComboAsync()
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<CostDistributionMethodComboDto>("EXEC spNacinDeljenjaTroskovaCombo")
+                .SqlQueryRaw<CostDistributionMethodLookup>("EXEC spNacinDeljenjaTroskovaCombo")
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -171,12 +171,12 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    public async Task<List<CostArticleComboDto>> GetCostArticlesComboAsync(int documentId)
+    public async Task<List<CostArticleLookup>> GetCostArticlesComboAsync(int documentId)
     {
         try
         {
             return await _context.Database
-                .SqlQueryRaw<CostArticleComboDto>(
+                .SqlQueryRaw<CostArticleLookup>(
                     "EXEC spDokumentTroskoviArtikliCOMBO @IDDokument = {0}",
                     documentId)
                 .ToListAsync();

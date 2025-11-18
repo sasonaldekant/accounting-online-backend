@@ -1,7 +1,6 @@
 using ERPAccounting.API.Middleware;
 using ERPAccounting.Application.DTOs;
 using ERPAccounting.Application.Services;
-using ERPAccounting.Application.Services.Contracts;
 using ERPAccounting.Application.Validators;
 using ERPAccounting.Common.Extensions;
 using ERPAccounting.Infrastructure.Extensions;

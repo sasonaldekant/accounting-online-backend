@@ -1,6 +1,8 @@
-using ERPAccounting.Application.Services.Contracts;
+using ERPAccounting.Domain.Abstractions.Gateways;
+using ERPAccounting.Domain.Abstractions.Repositories;
 using ERPAccounting.Infrastructure.Data;
 using ERPAccounting.Infrastructure.Repositories;
+using ERPAccounting.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentLineItemRepository, DocumentLineItemRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IStoredProcedureGateway, StoredProcedureGateway>();
 
         return services;
     }
