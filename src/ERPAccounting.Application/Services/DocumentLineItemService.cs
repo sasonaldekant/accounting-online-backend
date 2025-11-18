@@ -1,5 +1,5 @@
 using ERPAccounting.Application.DTOs;
-using ERPAccounting.Application.Services.Contracts;
+using ERPAccounting.Domain.Abstractions.Repositories;
 using ERPAccounting.Domain.Entities;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -126,7 +126,6 @@ namespace ERPAccounting.Application.Services
             entity.IsDeleted = true;
             entity.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.SaveChangesAsync();
-            return true;
         }
 
         private static void ApplyPatch(DocumentLineItem entity, PatchLineItemDto dto)

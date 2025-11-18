@@ -88,7 +88,7 @@ namespace ERPAccounting.API.Controllers
         [HttpGet(ApiRoutes.Lookups.CostDistributionMethods)]
         [ProducesResponseType(typeof(List<CostDistributionMethodComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<CostDistributionMethodComboDto>>> GetCostDistributionMethods()
-            => ExecuteLookupAsync(_spService.GetCostDistributionMethodsComboAsync, "načina deljenja troškova");
+            => ExecuteLookupAsync(_lookupService.GetCostDistributionMethodsComboAsync, "načina deljenja troškova");
 
         [HttpGet(ApiRoutes.Lookups.CostArticles)]
         [ProducesResponseType(typeof(List<CostArticleComboDto>), StatusCodes.Status200OK)]

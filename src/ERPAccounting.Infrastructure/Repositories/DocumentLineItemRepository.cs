@@ -1,4 +1,4 @@
-using ERPAccounting.Application.Services.Contracts;
+using ERPAccounting.Domain.Abstractions.Repositories;
 using ERPAccounting.Domain.Entities;
 using ERPAccounting.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
