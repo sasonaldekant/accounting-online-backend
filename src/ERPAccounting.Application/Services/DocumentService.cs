@@ -101,7 +101,6 @@ public class DocumentService : IDocumentService
         }
 
         _mapper.Map(dto, entity);
-        entity.UpdatedAt = DateTime.UtcNow;
 
         _documentRepository.Update(entity);
         await _unitOfWork.SaveChangesAsync();
@@ -119,7 +118,6 @@ public class DocumentService : IDocumentService
         }
 
         entity.IsDeleted = true;
-        entity.UpdatedAt = DateTime.UtcNow;
 
         _documentRepository.Update(entity);
         await _unitOfWork.SaveChangesAsync();
