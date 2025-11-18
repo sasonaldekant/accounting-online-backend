@@ -36,7 +36,10 @@ public class DocumentCostLineItem : BaseEntity
     
     [Column("DodajPDVNaTroskove")]
     public int DodajPDVNaTroskove { get; set; } = 0;
-    
+
+    [Column("Napomena")]
+    public string? Napomena { get; set; }
+
     /// <summary>CRITICAL: RowVersion for ETag concurrency</summary>
     [Timestamp, Column("DokumentTroskoviStavkaTimeStamp")]
     public byte[]? DokumentTroskoviStavkaTimeStamp { get; set; }

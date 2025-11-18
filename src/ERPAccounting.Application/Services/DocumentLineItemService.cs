@@ -1,8 +1,10 @@
+using AutoMapper;
 using ERPAccounting.Application.DTOs;
-using ERPAccounting.Application.Services.Contracts;
+using ERPAccounting.Common.Constants;
+using ERPAccounting.Common.Exceptions;
+using ERPAccounting.Domain.Abstractions.Repositories;
 using ERPAccounting.Domain.Entities;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 
@@ -18,6 +20,7 @@ namespace ERPAccounting.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IValidator<CreateLineItemDto> _createValidator;
         private readonly IValidator<PatchLineItemDto> _patchValidator;
+        private readonly IMapper _mapper;
         private readonly ILogger<DocumentLineItemService> _logger;
 
         public DocumentLineItemService(
@@ -26,6 +29,7 @@ namespace ERPAccounting.Application.Services
             IUnitOfWork unitOfWork,
             IValidator<CreateLineItemDto> createValidator,
             IValidator<PatchLineItemDto> patchValidator,
+            IMapper mapper,
             ILogger<DocumentLineItemService> logger)
         {
             _lineItemRepository = lineItemRepository;
@@ -33,6 +37,7 @@ namespace ERPAccounting.Application.Services
             _unitOfWork = unitOfWork;
             _createValidator = createValidator;
             _patchValidator = patchValidator;
+            _mapper = mapper;
             _logger = logger;
         }
 
@@ -40,14 +45,14 @@ namespace ERPAccounting.Application.Services
         {
             var items = await _lineItemRepository.GetByDocumentAsync(documentId);
 
-            return items.Select(MapToDto).ToList();
+            return _mapper.Map<List<DocumentLineItemDto>>(items);
         }
 
         public async Task<DocumentLineItemDto?> GetAsync(int documentId, int itemId)
         {
             var entity = await _lineItemRepository.GetAsync(documentId, itemId);
 
-            return entity is null ? null : MapToDto(entity);
+            return entity is null ? null : _mapper.Map<DocumentLineItemDto>(entity);
         }
 
         public async Task<DocumentLineItemDto> CreateAsync(int documentId, CreateLineItemDto dto)
@@ -67,16 +72,13 @@ namespace ERPAccounting.Application.Services
                 IDPoreskaStopa = dto.TaxRateId,
                 ObracunAkciza = (short)(dto.CalculateExcise ? 1 : 0),
                 ObracunPorez = (short)(dto.CalculateTax ? 1 : 0),
-                Opis = dto.Description,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsDeleted = false
+                Opis = dto.Description
             };
 
             await _lineItemRepository.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            return MapToDto(entity);
+            return _mapper.Map<DocumentLineItemDto>(entity);
         }
 
         public async Task<DocumentLineItemDto> UpdateAsync(int documentId, int itemId, byte[] expectedRowVersion, PatchLineItemDto dto)
@@ -106,12 +108,10 @@ namespace ERPAccounting.Application.Services
             }
 
             ApplyPatch(entity, dto);
-            entity.UpdatedAt = DateTime.UtcNow;
-
             _lineItemRepository.Update(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            return MapToDto(entity);
+            return _mapper.Map<DocumentLineItemDto>(entity);
         }
 
         public async Task DeleteAsync(int documentId, int itemId)
@@ -124,9 +124,7 @@ namespace ERPAccounting.Application.Services
             }
 
             entity.IsDeleted = true;
-            entity.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.SaveChangesAsync();
-            return true;
         }
 
         private static void ApplyPatch(DocumentLineItem entity, PatchLineItemDto dto)
@@ -193,37 +191,9 @@ namespace ERPAccounting.Application.Services
                         group => group.Key,
                         group => group.Select(failure => failure.ErrorMessage).ToArray());
 
-                throw new ValidationException(ErrorMessages.ValidationFailed, errors);
+                throw new Common.Exceptions.ValidationException(ErrorMessages.ValidationFailed, errors);
             }
         }
 
-        private static DocumentLineItemDto MapToDto(DocumentLineItem entity)
-        {
-            var etag = entity.StavkaDokumentaTimeStamp is null
-                ? string.Empty
-                : Convert.ToBase64String(entity.StavkaDokumentaTimeStamp);
-
-            return new DocumentLineItemDto(
-                Id: entity.IDStavkaDokumenta,
-                DocumentId: entity.IDDokument,
-                ArticleId: entity.IDArtikal,
-                Quantity: entity.Kolicina,
-                InvoicePrice: entity.FakturnaCena,
-                DiscountAmount: entity.RabatDokument,
-                MarginAmount: entity.Marza,
-                TaxRateId: entity.IDPoreskaStopa,
-                TaxPercent: entity.ProcenatPoreza,
-                TaxAmount: entity.IznosPDV,
-                Total: entity.Iznos,
-                CalculateExcise: entity.ObracunAkciza == 1,
-                CalculateTax: entity.ObracunPorez == 1,
-                Description: entity.Opis,
-                ETag: etag,
-                CreatedAt: entity.CreatedAt,
-                UpdatedAt: entity.UpdatedAt,
-                CreatedBy: entity.CreatedBy,
-                UpdatedBy: entity.UpdatedBy
-            );
-        }
     }
 }

@@ -1,8 +1,9 @@
 using ERPAccounting.Domain.Entities;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace ERPAccounting.Application.Services.Contracts;
+namespace ERPAccounting.Domain.Abstractions.Repositories;
 
 /// <summary>
 /// Repository abstraction for accessing and modifying document line items without exposing EF Core details.

@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using ERPAccounting.Application.DTOs.Costs;
 using ERPAccounting.Application.Services;
+using ERPAccounting.Common.Exceptions;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace ERPAccounting.API.Controllers
 {
@@ -65,6 +65,11 @@ namespace ERPAccounting.API.Controllers
                 _logger.LogWarning(ex, "Validation error while creating cost for document {DocumentId}", documentId);
                 return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
+            catch (NotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Document not found while creating cost for document {DocumentId}", documentId);
+                return NotFound(new { message = ex.Detail });
+            }
         }
 
         [HttpPut("{costId:int}")]
@@ -91,11 +96,11 @@ namespace ERPAccounting.API.Controllers
                 _logger.LogWarning(ex, "Validation error while updating cost {CostId}", costId);
                 return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ConflictException)
             {
                 return Conflict(new { message = "Trošak je promenjen od strane drugog korisnika" });
             }
-            catch (KeyNotFoundException)
+            catch (NotFoundException)
             {
                 return NotFound(new { message = "Trošak nije pronađen" });
             }
@@ -149,6 +154,10 @@ namespace ERPAccounting.API.Controllers
                 _logger.LogWarning(ex, "Validation error while creating cost item {CostId}", costId);
                 return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
+            catch (NotFoundException)
+            {
+                return NotFound(new { message = "Trošak nije pronađen" });
+            }
         }
 
         [HttpPatch("{costId:int}/items/{itemId:int}")]
@@ -175,11 +184,11 @@ namespace ERPAccounting.API.Controllers
                 _logger.LogWarning(ex, "Validation error while updating cost item {CostItemId}", itemId);
                 return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ConflictException)
             {
                 return Conflict(new { message = "Stavka troška je promenjena" });
             }
-            catch (KeyNotFoundException)
+            catch (NotFoundException)
             {
                 return NotFound(new { message = "Stavka troška nije pronađena" });
             }
