@@ -1,3 +1,4 @@
+using ERPAccounting.API.Helpers;
 using ERPAccounting.Application.DTOs;
 using ERPAccounting.Application.Services;
 using ERPAccounting.Common.Constants;
@@ -6,7 +7,6 @@ using ERPAccounting.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ERPAccounting.API.Controllers
 {
@@ -73,7 +73,12 @@ namespace ERPAccounting.API.Controllers
             int itemId,
             [FromBody] PatchLineItemDto dto)
         {
-            if (!TryExtractRowVersion(out var expectedRowVersion, out var problemDetails))
+            if (!IfMatchHeaderParser.TryExtractRowVersion(
+                    HttpContext,
+                    _logger,
+                    "document line item PATCH",
+                    out var expectedRowVersion,
+                    out var problemDetails))
             {
                 return BadRequest(problemDetails);
             }
@@ -102,43 +107,12 @@ namespace ERPAccounting.API.Controllers
 
         private bool TryExtractRowVersion(out byte[]? rowVersion, out ProblemDetailsDto? problem)
         {
-            rowVersion = null;
-            problem = null;
-
-            var ifMatch = Request.Headers["If-Match"].FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(ifMatch))
-            {
-                _logger.LogWarning("Missing If-Match header for PATCH");
-                problem = CreateIfMatchProblem(ErrorMessages.MissingIfMatchHeader);
-                return false;
-            }
-
-            try
-            {
-                var etagValue = ifMatch.Trim('"');
-                rowVersion = Convert.FromBase64String(etagValue);
-                return true;
-            }
-            catch (FormatException ex)
-            {
-                _logger.LogWarning(ex, "Invalid ETag format: {ETag}", ifMatch);
-                problem = CreateIfMatchProblem(ErrorMessages.InvalidIfMatchHeader);
-                return false;
-            }
-        }
-
-        private ProblemDetailsDto CreateIfMatchProblem(string detail)
-        {
-            return ProblemDetailsDto.Create(
-                StatusCodes.Status400BadRequest,
-                ErrorMessages.BadRequestTitle,
-                detail,
-                HttpContext.TraceIdentifier,
-                ErrorCodes.MissingIfMatchHeader,
-                new Dictionary<string, string[]>
-                {
-                    ["If-Match"] = new[] { detail }
-                });
+            return IfMatchHeaderParser.TryExtractRowVersion(
+                HttpContext,
+                _logger,
+                "document line item PATCH",
+                out rowVersion,
+                out problem);
         }
     }
 }
