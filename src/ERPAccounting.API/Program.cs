@@ -20,6 +20,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IDocumentCostService, DocumentCostService>();
 builder.Services.AddScoped<IDocumentLineItemService, DocumentLineItemService>();
+builder.Services.AddScoped<ILookupService, LookupService>();
 builder.Services.AddScoped<IStoredProcedureService, StoredProcedureService>();
 builder.Services.AddScoped<IStoredProcedureGateway, StoredProcedureGateway>();
 builder.Services.AddDbContext<AppDbContext>(options =>
