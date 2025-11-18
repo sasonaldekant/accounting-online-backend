@@ -8,7 +8,7 @@ namespace ERPAccounting.Application.Services
     /// Servis za sve 11 Stored Procedures koji vraćaju combo podatke
     /// OBAVEZNO: Sve SP-ove moraju biti dostupne u bazi!
     /// </summary>
-    public class StoredProcedureService : ILookupService
+    public class StoredProcedureService : IStoredProcedureService
     {
         private readonly AppDbContext _context;
 

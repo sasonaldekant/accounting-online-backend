@@ -1,7 +1,7 @@
 using ERPAccounting.Application.DTOs;
+using ERPAccounting.Application.Services;
 using ERPAccounting.Common.Constants;
 using ERPAccounting.Common.Exceptions;
-using ERPAccounting.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -19,14 +19,14 @@ namespace ERPAccounting.API.Controllers
     [Authorize]
     public class LookupsController : ControllerBase
     {
-        private readonly ILookupService _lookupService;
+        private readonly IStoredProcedureService _storedProcedureService;
         private readonly ILogger<LookupsController> _logger;
 
         public LookupsController(
-            ILookupService lookupService,
+            IStoredProcedureService storedProcedureService,
             ILogger<LookupsController> logger)
         {
-            _lookupService = lookupService;
+            _storedProcedureService = storedProcedureService;
             _logger = logger;
         }
 
@@ -35,7 +35,7 @@ namespace ERPAccounting.API.Controllers
         public Task<ActionResult<List<PartnerComboDto>>> GetPartners()
             => ExecuteLookupAsync(async () =>
             {
-                var result = await _lookupService.GetPartnerComboAsync();
+                var result = await _storedProcedureService.GetPartnerComboAsync();
                 _logger.LogInformation("Partners loaded: {Count}", result.Count);
                 return result;
             }, "partnera");
@@ -46,7 +46,7 @@ namespace ERPAccounting.API.Controllers
             => ExecuteLookupAsync(async () =>
             {
                 docTypeId ??= "UR";
-                var result = await _spService.GetOrgUnitsComboAsync(docTypeId);
+                var result = await _storedProcedureService.GetOrgUnitsComboAsync(docTypeId);
                 _logger.LogInformation("Organizational units loaded for {DocType}: {Count}", docTypeId, result.Count);
                 return result;
             }, "organizacionih jedinica");
@@ -54,50 +54,50 @@ namespace ERPAccounting.API.Controllers
         [HttpGet(ApiRoutes.Lookups.TaxationMethods)]
         [ProducesResponseType(typeof(List<TaxationMethodComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<TaxationMethodComboDto>>> GetTaxationMethods()
-            => ExecuteLookupAsync(_spService.GetTaxationMethodsComboAsync, "načina oporezivanja");
+            => ExecuteLookupAsync(_storedProcedureService.GetTaxationMethodsComboAsync, "načina oporezivanja");
 
         [HttpGet(ApiRoutes.Lookups.Referents)]
         [ProducesResponseType(typeof(List<ReferentComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<ReferentComboDto>>> GetReferents()
-            => ExecuteLookupAsync(_spService.GetReferentsComboAsync, "referenata");
+            => ExecuteLookupAsync(_storedProcedureService.GetReferentsComboAsync, "referenata");
 
         [HttpGet(ApiRoutes.Lookups.DocumentsNd)]
         [ProducesResponseType(typeof(List<DocumentNDComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<DocumentNDComboDto>>> GetDocumentsND()
-            => ExecuteLookupAsync(_spService.GetDocumentNDComboAsync, "ND dokumenata");
+            => ExecuteLookupAsync(_storedProcedureService.GetDocumentNDComboAsync, "ND dokumenata");
 
         [HttpGet(ApiRoutes.Lookups.TaxRates)]
         [ProducesResponseType(typeof(List<TaxRateComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<TaxRateComboDto>>> GetTaxRates()
-            => ExecuteLookupAsync(_spService.GetTaxRatesComboAsync, "poreskih stopa");
+            => ExecuteLookupAsync(_storedProcedureService.GetTaxRatesComboAsync, "poreskih stopa");
 
         [HttpGet(ApiRoutes.Lookups.Articles)]
         [ProducesResponseType(typeof(List<ArticleComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<ArticleComboDto>>> GetArticles()
-            => ExecuteLookupAsync(_spService.GetArticlesComboAsync, "artikala");
+            => ExecuteLookupAsync(_storedProcedureService.GetArticlesComboAsync, "artikala");
 
         [HttpGet(ApiRoutes.Lookups.DocumentCosts)]
         [ProducesResponseType(typeof(List<DocumentCostsListDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<DocumentCostsListDto>>> GetDocumentCosts(int documentId)
-            => ExecuteLookupAsync(() => _spService.GetDocumentCostsListAsync(documentId), "troškova");
+            => ExecuteLookupAsync(() => _storedProcedureService.GetDocumentCostsListAsync(documentId), "troškova");
 
         [HttpGet(ApiRoutes.Lookups.CostTypes)]
         [ProducesResponseType(typeof(List<CostTypeComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<CostTypeComboDto>>> GetCostTypes()
-            => ExecuteLookupAsync(_spService.GetCostTypesComboAsync, "vrsta troškova");
+            => ExecuteLookupAsync(_storedProcedureService.GetCostTypesComboAsync, "vrsta troškova");
 
         [HttpGet(ApiRoutes.Lookups.CostDistributionMethods)]
         [ProducesResponseType(typeof(List<CostDistributionMethodComboDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<CostDistributionMethodComboDto>>> GetCostDistributionMethods()
         {
-            var result = await _spService.GetCostDistributionMethodsComboAsync();
+            var result = await _storedProcedureService.GetCostDistributionMethodsComboAsync();
             return Ok(result);
         }
 
         [HttpGet(ApiRoutes.Lookups.CostArticles)]
         [ProducesResponseType(typeof(List<CostArticleComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<CostArticleComboDto>>> GetCostArticles(int documentId)
-            => ExecuteLookupAsync(() => _spService.GetCostArticlesComboAsync(documentId), "artikala za troškove");
+            => ExecuteLookupAsync(() => _storedProcedureService.GetCostArticlesComboAsync(documentId), "artikala za troškove");
 
         private async Task<ActionResult<List<T>>> ExecuteLookupAsync<T>(Func<Task<List<T>>> action, string resourceName)
         {
