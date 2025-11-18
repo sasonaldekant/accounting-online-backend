@@ -8,6 +8,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using ValidationException = ERPAccounting.Common.Exceptions.ValidationException;
 
 namespace ERPAccounting.Application.Services;
 

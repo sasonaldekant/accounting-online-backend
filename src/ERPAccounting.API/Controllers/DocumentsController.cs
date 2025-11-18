@@ -1,8 +1,8 @@
-using System.Linq;
 using ERPAccounting.Application.DTOs;
 using ERPAccounting.Application.DTOs.Documents;
 using ERPAccounting.Application.Services;
-using FluentValidation;
+using ERPAccounting.Common.Exceptions;
+using ERPAccounting.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -64,7 +64,7 @@ namespace ERPAccounting.API.Controllers
             catch (ValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while creating document");
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(ProblemDetailsDto.FromException(ex, HttpContext.TraceIdentifier));
             }
         }
 
@@ -90,7 +90,7 @@ namespace ERPAccounting.API.Controllers
             catch (ValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while updating document {DocumentId}", documentId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(ProblemDetailsDto.FromException(ex, HttpContext.TraceIdentifier));
             }
             catch (DbUpdateConcurrencyException)
             {
