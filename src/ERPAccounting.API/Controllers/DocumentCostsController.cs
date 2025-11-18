@@ -3,9 +3,9 @@ using System.Linq;
 using ERPAccounting.Application.DTOs.Costs;
 using ERPAccounting.Application.Services;
 using ERPAccounting.Common.Exceptions;
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using DomainValidationException = ERPAccounting.Common.Exceptions.ValidationException;
 
 namespace ERPAccounting.API.Controllers
 {
@@ -60,10 +60,10 @@ namespace ERPAccounting.API.Controllers
                 Response.Headers["ETag"] = $"\"{created.ETag}\"";
                 return CreatedAtAction(nameof(GetCost), new { documentId, costId = created.Id }, created);
             }
-            catch (ValidationException ex)
+            catch (DomainValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while creating cost for document {DocumentId}", documentId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(new { title = ex.Title, detail = ex.Detail, errors = ex.Errors });
             }
             catch (NotFoundException ex)
             {
@@ -91,10 +91,10 @@ namespace ERPAccounting.API.Controllers
                 Response.Headers["ETag"] = $"\"{updated.ETag}\"";
                 return Ok(updated);
             }
-            catch (ValidationException ex)
+            catch (DomainValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while updating cost {CostId}", costId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(new { title = ex.Title, detail = ex.Detail, errors = ex.Errors });
             }
             catch (ConflictException)
             {
@@ -149,10 +149,10 @@ namespace ERPAccounting.API.Controllers
                 Response.Headers["ETag"] = $"\"{created.ETag}\"";
                 return CreatedAtAction(nameof(GetCostItem), new { documentId, costId, itemId = created.Id }, created);
             }
-            catch (ValidationException ex)
+            catch (DomainValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while creating cost item {CostId}", costId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(new { title = ex.Title, detail = ex.Detail, errors = ex.Errors });
             }
             catch (NotFoundException)
             {
@@ -179,10 +179,10 @@ namespace ERPAccounting.API.Controllers
                 Response.Headers["ETag"] = $"\"{updated.ETag}\"";
                 return Ok(updated);
             }
-            catch (ValidationException ex)
+            catch (DomainValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while updating cost item {CostItemId}", itemId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(new { title = ex.Title, detail = ex.Detail, errors = ex.Errors });
             }
             catch (ConflictException)
             {
