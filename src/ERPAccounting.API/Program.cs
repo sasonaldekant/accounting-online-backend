@@ -6,6 +6,7 @@ using ERPAccounting.Application.Services.Contracts;
 using ERPAccounting.Application.Validators;
 using ERPAccounting.Infrastructure.Data;
 using ERPAccounting.Infrastructure.Repositories;
+using ERPAccounting.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +28,8 @@ builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IValidator<CreateLineItemDto>, CreateLineItemValidator>();
 builder.Services.AddScoped<IValidator<PatchLineItemDto>, PatchLineItemValidator>();
-builder.Services.AddScoped<IStoredProcedureService, StoredProcedureService>();
+builder.Services.AddScoped<IStoredProcedureGateway, StoredProcedureGateway>();
+builder.Services.AddScoped<ILookupService, StoredProcedureService>();
 
 var app = builder.Build();
 

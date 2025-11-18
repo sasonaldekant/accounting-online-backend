@@ -1,259 +1,57 @@
-using Microsoft.EntityFrameworkCore;
-using ERPAccounting.Infrastructure.Data;
 using ERPAccounting.Application.DTOs;
+using ERPAccounting.Application.Services.Contracts;
 
 namespace ERPAccounting.Application.Services
 {
     /// <summary>
-    /// Servis za sve 11 Stored Procedures koji vraćaju combo podatke
-    /// OBAVEZNO: Sve SP-ove moraju biti dostupne u bazi!
+    /// Servis koji orkestrira sve lookup pozive ka bazi preko gateway-a
+    /// kako bi se zadržala čista aplikaciona logika bez EF Core zavisnosti.
     /// </summary>
     public class StoredProcedureService : IStoredProcedureService
     {
-        private readonly AppDbContext _context;
+        private readonly IStoredProcedureGateway _gateway;
 
-        public StoredProcedureService(AppDbContext context)
+        public StoredProcedureService(IStoredProcedureGateway gateway)
         {
-            _context = context;
+            _gateway = gateway;
         }
 
-        // ══════════════════════════════════════════════════
-        // SP 1: spPartnerComboStatusNabavka
-        /// <summary>
-        /// Vraća listu partnera za nabavku sa statusom
-        /// Koristi se za combo box partnera pri kreiranju dokumenata
-        /// </summary>
-        public async Task<List<PartnerComboDto>> GetPartnerComboAsync()
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<PartnerComboDto>(
-                        "EXEC spPartnerComboStatusNabavka")
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spPartnerComboStatusNabavka", ex);
-            }
-        }
+        public Task<List<PartnerComboDto>> GetPartnerComboAsync()
+            => _gateway.GetPartnerComboAsync();
 
-        // ══════════════════════════════════════════════════
-        // SP 2: spOrganizacionaJedinicaCombo
-        /// <summary>
-        /// Vraća listu organizacionih jedinica za određenu vrstu dokumenta
-        /// @IDVrstaDokumenta: "UR" za unos, "OD" za otpremu, itd.
-        /// </summary>
-        public async Task<List<OrgUnitComboDto>> GetOrgUnitsComboAsync(string docTypeId)
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<OrgUnitComboDto>(
-                        "EXEC spOrganizacionaJedinicaCombo @IDVrstaDokumenta = {0}",
-                        docTypeId)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spOrganizacionaJedinicaCombo", ex);
-            }
-        }
+        public Task<List<OrgUnitComboDto>> GetOrgUnitsComboAsync(string docTypeId)
+            => _gateway.GetOrgUnitsComboAsync(docTypeId);
 
-        // ══════════════════════════════════════════════════
-        // SP 3: spNacinOporezivanjaComboNabavka
-        /// <summary>
-        /// Vraća listu načina oporezivanja za nabavne dokumente
-        /// Koristi se za izbor metode oporezivanja
-        /// </summary>
-        public async Task<List<TaxationMethodComboDto>> GetTaxationMethodsComboAsync()
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<TaxationMethodComboDto>(
-                        "EXEC spNacinOporezivanjaComboNabavka")
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spNacinOporezivanjaComboNabavka", ex);
-            }
-        }
+        public Task<List<TaxationMethodComboDto>> GetTaxationMethodsComboAsync()
+            => _gateway.GetTaxationMethodsComboAsync();
 
-        // ══════════════════════════════════════════════════
-        // SP 4: spReferentCombo
-        /// <summary>
-        /// Vraća listu referenata (zaposlenih)
-        /// Koristi se za izbor referenta za dokument
-        /// </summary>
-        public async Task<List<ReferentComboDto>> GetReferentsComboAsync()
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<ReferentComboDto>(
-                        "EXEC spReferentCombo")
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spReferentCombo", ex);
-            }
-        }
+        public Task<List<ReferentComboDto>> GetReferentsComboAsync()
+            => _gateway.GetReferentsComboAsync();
 
-        // ══════════════════════════════════════════════════
-        // SP 5: spDokumentNDCombo
-        /// <summary>
-        /// Vraća listu ND dokumenata kao referentnih dokumenata
-        /// Koristi se za linkovanje sa referentnim dokumentom
-        /// </summary>
-        public async Task<List<DocumentNDComboDto>> GetDocumentNDComboAsync()
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<DocumentNDComboDto>(
-                        "EXEC spDokumentNDCombo")
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spDokumentNDCombo", ex);
-            }
-        }
+        public Task<List<DocumentNDComboDto>> GetDocumentNDComboAsync()
+            => _gateway.GetDocumentNDComboAsync();
 
-        // ══════════════════════════════════════════════════
-        // SP 6: spPoreskaStopaCombo
-        /// <summary>
-        /// Vraća listu poreskih stopa
-        /// Koristi se za izbor PDV stope pri kreiranju stavki
-        /// </summary>
-        public async Task<List<TaxRateComboDto>> GetTaxRatesComboAsync()
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<TaxRateComboDto>(
-                        "EXEC spPoreskaStopaCombo")
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spPoreskaStopaCombo", ex);
-            }
-        }
+        public Task<List<TaxRateComboDto>> GetTaxRatesComboAsync()
+            => _gateway.GetTaxRatesComboAsync();
 
-        // ══════════════════════════════════════════════════
-        // SP 7: spArtikalComboUlaz
-        /// <summary>
-        /// Vraća listu artikala za unos/nabavne dokumente
-        /// Koristi se za autocomplete/combo pri izboru artikla
-        /// </summary>
-        public async Task<List<ArticleComboDto>> GetArticlesComboAsync()
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<ArticleComboDto>(
-                        "EXEC spArtikalComboUlaz")
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spArtikalComboUlaz", ex);
-            }
-        }
+        public Task<List<ArticleComboDto>> GetArticlesComboAsync()
+            => _gateway.GetArticlesComboAsync();
 
-        // ══════════════════════════════════════════════════
-        // SP 8: spDokumentTroskoviLista
-        /// <summary>
-        /// Vraća listu troškova za određeni dokument
-        /// @IDDokument: ID dokumenta
-        /// </summary>
-        public async Task<List<DocumentCostsListDto>> GetDocumentCostsListAsync(int documentId)
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<DocumentCostsListDto>(
-                        "EXEC spDokumentTroskoviLista @IDDokument = {0}",
-                        documentId)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spDokumentTroskoviLista", ex);
-            }
-        }
+        public Task<List<DocumentCostsListDto>> GetDocumentCostsListAsync(int documentId)
+            => _gateway.GetDocumentCostsListAsync(documentId);
 
-        // ══════════════════════════════════════════════════
-        // SP 9: spUlazniRacuniIzvedeniTroskoviCombo
-        /// <summary>
-        /// Vraća listu vrsta troškova za obradu troškova
-        /// Koristi se za izbor vrste troška pri kreiranju troška
-        /// </summary>
-        public async Task<List<CostTypeComboDto>> GetCostTypesComboAsync()
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<CostTypeComboDto>(
-                        "EXEC spUlazniRacuniIzvedeniTroskoviCombo")
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spUlazniRacuniIzvedeniTroskoviCombo", ex);
-            }
-        }
+        public Task<List<CostTypeComboDto>> GetCostTypesComboAsync()
+            => _gateway.GetCostTypesComboAsync();
 
-        // ══════════════════════════════════════════════════
-        // SP 10: spNacinDeljenjaTroskovaCombo
-        /// <summary>
-        /// Vraća listu načina deljenja troškova: 1=Po količini, 2=Po vrednosti, 3=Ručno
-        /// Hardcoded jer se ne menja
-        /// </summary>
-        public async Task<List<CostDistributionMethodComboDto>> GetCostDistributionMethodsComboAsync()
-        {
-            return await Task.FromResult(new List<CostDistributionMethodComboDto>
+        public Task<List<CostDistributionMethodComboDto>> GetCostDistributionMethodsComboAsync()
+            => Task.FromResult(new List<CostDistributionMethodComboDto>
             {
                 new() { Id = 1, Naziv = "Po količini", Opis = "Raspodela proporcionalno količini" },
                 new() { Id = 2, Naziv = "Po vrednosti", Opis = "Raspodela proporcionalno vrednosti" },
                 new() { Id = 3, Naziv = "Ručno", Opis = "Ručno unošenje raspodele" }
             });
-        }
 
-        // ══════════════════════════════════════════════════
-        // SP 11: spDokumentTroskoviArtikliCOMBO
-        /// <summary>
-        /// Vraća listu artikala iz stavki određenog dokumenta za raspoređivanje troškova
-        /// @IDDokument: ID dokumenta
-        /// </summary>
-        public async Task<List<CostArticleComboDto>> GetCostArticlesComboAsync(int documentId)
-        {
-            try
-            {
-                return await _context.Database
-                    .SqlQueryRaw<CostArticleComboDto>(
-                        "EXEC spDokumentTroskoviArtikliCOMBO @IDDokument = {0}",
-                        documentId)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "Greška pri izvršavanju spDokumentTroskoviArtikliCOMBO", ex);
-            }
-        }
+        public Task<List<CostArticleComboDto>> GetCostArticlesComboAsync(int documentId)
+            => _gateway.GetCostArticlesComboAsync(documentId);
     }
 }
