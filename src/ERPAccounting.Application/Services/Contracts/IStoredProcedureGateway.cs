@@ -1,16 +1,16 @@
 using ERPAccounting.Application.DTOs;
 
-namespace ERPAccounting.Application.Services;
+namespace ERPAccounting.Application.Services.Contracts;
 
 /// <summary>
-/// Provides a controller-facing abstraction for all lookup related operations.
-/// Coordinates calls to the stored-procedure service while keeping
-/// defaulting/validation logic inside the application layer.
+/// Abstraction over stored procedures used by lookup services.
+/// Provides a persistence-agnostic contract so the application layer
+/// does not depend on EF Core or a specific database implementation.
 /// </summary>
-public interface ILookupService
+public interface IStoredProcedureGateway
 {
     Task<List<PartnerComboDto>> GetPartnerComboAsync();
-    Task<List<OrgUnitComboDto>> GetOrgUnitsComboAsync(string? docTypeId = null);
+    Task<List<OrgUnitComboDto>> GetOrgUnitsComboAsync(string docTypeId);
     Task<List<TaxationMethodComboDto>> GetTaxationMethodsComboAsync();
     Task<List<ReferentComboDto>> GetReferentsComboAsync();
     Task<List<DocumentNDComboDto>> GetDocumentNDComboAsync();

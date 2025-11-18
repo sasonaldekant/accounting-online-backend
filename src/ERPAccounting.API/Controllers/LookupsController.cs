@@ -48,8 +48,7 @@ namespace ERPAccounting.API.Controllers
         public Task<ActionResult<List<OrgUnitComboDto>>> GetOrgUnits([FromQuery] string? docTypeId = null)
             => ExecuteLookupAsync(async () =>
             {
-                docTypeId ??= "UR";
-                var result = await _spService.GetOrgUnitsComboAsync(docTypeId);
+                var result = await _lookupService.GetOrgUnitsComboAsync(docTypeId);
                 _logger.LogInformation("Organizational units loaded for {DocType}: {Count}", docTypeId, result.Count);
                 return result;
             }, "organizacionih jedinica");
@@ -57,50 +56,47 @@ namespace ERPAccounting.API.Controllers
         [HttpGet(ApiRoutes.Lookups.TaxationMethods)]
         [ProducesResponseType(typeof(List<TaxationMethodComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<TaxationMethodComboDto>>> GetTaxationMethods()
-            => ExecuteLookupAsync(_spService.GetTaxationMethodsComboAsync, "načina oporezivanja");
+            => ExecuteLookupAsync(_lookupService.GetTaxationMethodsComboAsync, "načina oporezivanja");
 
         [HttpGet(ApiRoutes.Lookups.Referents)]
         [ProducesResponseType(typeof(List<ReferentComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<ReferentComboDto>>> GetReferents()
-            => ExecuteLookupAsync(_spService.GetReferentsComboAsync, "referenata");
+            => ExecuteLookupAsync(_lookupService.GetReferentsComboAsync, "referenata");
 
         [HttpGet(ApiRoutes.Lookups.DocumentsNd)]
         [ProducesResponseType(typeof(List<DocumentNDComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<DocumentNDComboDto>>> GetDocumentsND()
-            => ExecuteLookupAsync(_spService.GetDocumentNDComboAsync, "ND dokumenata");
+            => ExecuteLookupAsync(_lookupService.GetDocumentNDComboAsync, "ND dokumenata");
 
         [HttpGet(ApiRoutes.Lookups.TaxRates)]
         [ProducesResponseType(typeof(List<TaxRateComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<TaxRateComboDto>>> GetTaxRates()
-            => ExecuteLookupAsync(_spService.GetTaxRatesComboAsync, "poreskih stopa");
+            => ExecuteLookupAsync(_lookupService.GetTaxRatesComboAsync, "poreskih stopa");
 
         [HttpGet(ApiRoutes.Lookups.Articles)]
         [ProducesResponseType(typeof(List<ArticleComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<ArticleComboDto>>> GetArticles()
-            => ExecuteLookupAsync(_spService.GetArticlesComboAsync, "artikala");
+            => ExecuteLookupAsync(_lookupService.GetArticlesComboAsync, "artikala");
 
         [HttpGet(ApiRoutes.Lookups.DocumentCosts)]
         [ProducesResponseType(typeof(List<DocumentCostsListDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<DocumentCostsListDto>>> GetDocumentCosts(int documentId)
-            => ExecuteLookupAsync(() => _spService.GetDocumentCostsListAsync(documentId), "troškova");
+            => ExecuteLookupAsync(() => _lookupService.GetDocumentCostsListAsync(documentId), "troškova");
 
         [HttpGet(ApiRoutes.Lookups.CostTypes)]
         [ProducesResponseType(typeof(List<CostTypeComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<CostTypeComboDto>>> GetCostTypes()
-            => ExecuteLookupAsync(_spService.GetCostTypesComboAsync, "vrsta troškova");
+            => ExecuteLookupAsync(_lookupService.GetCostTypesComboAsync, "vrsta troškova");
 
         [HttpGet(ApiRoutes.Lookups.CostDistributionMethods)]
         [ProducesResponseType(typeof(List<CostDistributionMethodComboDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<List<CostDistributionMethodComboDto>>> GetCostDistributionMethods()
-        {
-            var result = await _spService.GetCostDistributionMethodsComboAsync();
-            return Ok(result);
-        }
+        public Task<ActionResult<List<CostDistributionMethodComboDto>>> GetCostDistributionMethods()
+            => ExecuteLookupAsync(_spService.GetCostDistributionMethodsComboAsync, "načina deljenja troškova");
 
         [HttpGet(ApiRoutes.Lookups.CostArticles)]
         [ProducesResponseType(typeof(List<CostArticleComboDto>), StatusCodes.Status200OK)]
         public Task<ActionResult<List<CostArticleComboDto>>> GetCostArticles(int documentId)
-            => ExecuteLookupAsync(() => _spService.GetCostArticlesComboAsync(documentId), "artikala za troškove");
+            => ExecuteLookupAsync(() => _lookupService.GetCostArticlesComboAsync(documentId), "artikala za troškove");
 
         private async Task<ActionResult<List<T>>> ExecuteLookupAsync<T>(Func<Task<List<T>>> action, string resourceName)
         {
