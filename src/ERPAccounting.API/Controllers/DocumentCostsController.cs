@@ -1,11 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
-using ERPAccounting.API.Helpers;
 using ERPAccounting.Application.DTOs.Costs;
 using ERPAccounting.Application.Services;
 using ERPAccounting.Common.Models;
 using ERPAccounting.Common.Exceptions;
-using FluentValidation;
+using ERPAccounting.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -65,7 +63,7 @@ namespace ERPAccounting.API.Controllers
             catch (ValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while creating cost for document {DocumentId}", documentId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(ProblemDetailsDto.FromException(ex, HttpContext.TraceIdentifier));
             }
             catch (NotFoundException ex)
             {
@@ -100,7 +98,7 @@ namespace ERPAccounting.API.Controllers
             catch (ValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while updating cost {CostId}", costId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(ProblemDetailsDto.FromException(ex, HttpContext.TraceIdentifier));
             }
             catch (ConflictException)
             {
@@ -158,7 +156,7 @@ namespace ERPAccounting.API.Controllers
             catch (ValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while creating cost item {CostId}", costId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(ProblemDetailsDto.FromException(ex, HttpContext.TraceIdentifier));
             }
             catch (NotFoundException)
             {
@@ -192,7 +190,7 @@ namespace ERPAccounting.API.Controllers
             catch (ValidationException ex)
             {
                 _logger.LogWarning(ex, "Validation error while updating cost item {CostItemId}", itemId);
-                return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+                return BadRequest(ProblemDetailsDto.FromException(ex, HttpContext.TraceIdentifier));
             }
             catch (ConflictException)
             {
