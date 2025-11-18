@@ -20,13 +20,16 @@ namespace ERPAccounting.API.Controllers
     public class LookupsController : ControllerBase
     {
         private readonly ILookupService _lookupService;
+        private readonly IStoredProcedureService _spService;
         private readonly ILogger<LookupsController> _logger;
 
         public LookupsController(
             ILookupService lookupService,
+            IStoredProcedureService storedProcedureService,
             ILogger<LookupsController> logger)
         {
             _lookupService = lookupService;
+            _spService = storedProcedureService;
             _logger = logger;
         }
 
