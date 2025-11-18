@@ -1,5 +1,5 @@
 using ERPAccounting.API.Middleware;
-using ERPAccounting.Application.DTOs.LineItems;
+using ERPAccounting.Application.DTOs;
 using ERPAccounting.Application.Services;
 using ERPAccounting.Application.Services.Contracts;
 using ERPAccounting.Application.Validators;
