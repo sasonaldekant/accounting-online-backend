@@ -240,7 +240,7 @@ public class DocumentCostService : IDocumentCostService
                 (processed, distributedAmount) = ApplyManualDistribution(items, dto.ManualDistribution);
                 break;
             default:
-                throw new ValidationException(ErrorMessages.InvalidCostDistributionMethod, new Dictionary<string, string[]>
+                throw new Common.Exceptions.ValidationException(ErrorMessages.InvalidCostDistributionMethod, new Dictionary<string, string[]>
                 {
                     [nameof(dto.DistributionMethodId)] = new[] { ErrorMessages.InvalidCostDistributionMethod }
                 });
@@ -294,7 +294,7 @@ public class DocumentCostService : IDocumentCostService
     {
         if (manual is null || manual.Count == 0)
         {
-            throw new ValidationException(ErrorMessages.CostManualDistributionRequired, new Dictionary<string, string[]>
+            throw new Common.Exceptions.ValidationException(ErrorMessages.CostManualDistributionRequired, new Dictionary<string, string[]>
             {
                 [nameof(CostDistributionRequestDto.ManualDistribution)] = new[] { ErrorMessages.CostManualDistributionRequired }
             });
@@ -347,7 +347,7 @@ public class DocumentCostService : IDocumentCostService
                     group => group.Key,
                     group => group.Select(failure => failure.ErrorMessage).ToArray());
 
-            throw new ValidationException(ErrorMessages.ValidationFailed, errors);
+            throw new Common.Exceptions.ValidationException(ErrorMessages.ValidationFailed, errors);
         }
     }
 
