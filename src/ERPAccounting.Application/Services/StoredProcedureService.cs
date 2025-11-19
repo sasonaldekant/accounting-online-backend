@@ -1,7 +1,6 @@
 using ERPAccounting.Application.DTOs;
 using ERPAccounting.Domain.Abstractions.Gateways;
 using ERPAccounting.Domain.Lookups;
-using System.Linq;
 
 namespace ERPAccounting.Application.Services
 {

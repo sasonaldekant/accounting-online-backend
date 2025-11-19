@@ -1,5 +1,3 @@
-using System;
-
 namespace ERPAccounting.Application.DTOs.Documents;
 
 /// <summary>

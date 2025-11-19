@@ -6,7 +6,6 @@ using ERPAccounting.Domain.Abstractions.Repositories;
 using ERPAccounting.Domain.Entities;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 
 namespace ERPAccounting.Application.Services
 {
