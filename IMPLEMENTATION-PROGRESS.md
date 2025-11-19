@@ -78,7 +78,8 @@
 
 **Fajlovi:**
 - `src/ERPAccounting.Application/Services/IStoredProcedureService.cs` ✅
-- `src/ERPAccounting.Infrastructure/Services/StoredProcedureService.cs` ✅
+- `src/ERPAccounting.Application/Services/StoredProcedureService.cs` ✅
+- `src/ERPAccounting.Infrastructure/Services/StoredProcedureGateway.cs` ✅
 
 ---
 
