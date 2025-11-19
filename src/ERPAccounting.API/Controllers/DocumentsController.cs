@@ -1,3 +1,5 @@
+using System.Linq;
+using ERPAccounting.API.Helpers;
 using ERPAccounting.Application.DTOs;
 using ERPAccounting.Application.DTOs.Documents;
 using ERPAccounting.Application.Services;
