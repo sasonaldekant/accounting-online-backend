@@ -1,6 +1,6 @@
+using ERPAccounting.API.Extensions;
 using ERPAccounting.API.Middleware;
 using ERPAccounting.Application.Extensions;
-using ERPAccounting.Common.Extensions;
 using ERPAccounting.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);

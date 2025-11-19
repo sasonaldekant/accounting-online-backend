@@ -7,6 +7,7 @@
 - HTTP request/response handling
 - Dependency Injection setup
 - Middleware configuration
+- Global exception handling extensions
 - CORS policy
 - Swagger/OpenAPI documentation
 
@@ -17,6 +18,9 @@ Controllers/
 ├── DocumentItemsController.cs
 ├── DocumentCostsController.cs
 └── LookupsController.cs
+
+Extensions/
+└── ExceptionHandlingExtensions.cs
 
 Program.cs                  # Entry point & DI
 appsettings.json            # Configuration

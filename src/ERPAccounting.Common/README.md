@@ -5,7 +5,6 @@
 ## Odgovornosti
 - Custom exceptions
 - Constants (API routes, error poruke, kodovi)
-- Extension methods (exception handling)
 - Common response modeli (ProblemDetails)
 - Helpers
 
@@ -21,9 +20,6 @@ Constants/
 ├── ApiRoutes.cs
 ├── ErrorCodes.cs
 └── ErrorMessages.cs
-
-Extensions/
-└── ExceptionHandlingExtensions.cs
 
 Models/
 ├── ProblemDetailsDto.cs
