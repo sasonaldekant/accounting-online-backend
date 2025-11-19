@@ -8,6 +8,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ERPAccounting.Application", "ERPAccounting.Application\ERPAccounting.Application.csproj", "{3F74B9A6-105F-4374-8707-AFCAE7DEAE7C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ERPAccounting.Infrastructure", "ERPAccounting.Infrastructure\ERPAccounting.Infrastructure.csproj", "{C898352B-D3A5-4D60-9DCB-AAF21D012EB1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3F74B9A6-105F-4374-8707-AFCAE7DEAE7C} = {3F74B9A6-105F-4374-8707-AFCAE7DEAE7C}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ERPAccounting.API", "ERPAccounting.API\ERPAccounting.API.csproj", "{4B7F0984-9A23-48A5-BDA0-0FDA4A4916D1}"
 EndProject

@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\ERPAccounting.Application\ERPAccounting.Application.csproj" />
     <ProjectReference Include="..\ERPAccounting.Domain\ERPAccounting.Domain.csproj" />
     <ProjectReference Include="..\ERPAccounting.Common\ERPAccounting.Common.csproj" />
   </ItemGroup>
