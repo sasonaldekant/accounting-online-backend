@@ -1,0 +1,226 @@
+*** Begin Patch
+*** Update File: src/ERPAccounting.Domain/Lookups/LookupModels.cs
+@@
+-public record PartnerLookup(
+-    int IdPartner,
+-    string NazivPartnera,
+-    string? Mesto,
+-    string? Sifra,
+-    int Status
+-);
++/// <summary>
++/// Result model for <c>spPartnerComboStatusNabavka</c>.
++///
++/// The stored procedure returns a set of partner lookup rows with a defined
++/// column ordering and names.  According to the specification the output
++/// includes the partner identifier, name, town, partner code, status id and a
++/// human readable status description.  Additional columns such as the
++/// taxation method id or calculation flags are ignored by this model.  Using
++/// property names that match the column names ensures Entity Framework Core
++/// can materialise the results without throwing “required column not found”
++/// exceptions.
++/// </summary>
++public record PartnerLookup(
++    int IdPartner,
++    string NazivPartnera,
++    string? Mesto,
++    string? SifraPartner,
++    int IdStatus,
++    string? Opis
++);
+@@
+-public record OrgUnitLookup(
+-    int IdOrganizacionaJedinica,
+-    string Naziv,
+-    string? Mesto,
+-    string? Sifra
+-);
++/// <summary>
++/// Result model for <c>spOrganizacionaJedinicaCombo</c>.
++///
++/// The stored procedure constructs the name from the warehouse code and name
++/// and returns the warehouse code separately as <c>SifraOrganizacionaJedinica</c>.
++/// Using the explicit property name here aligns with the returned column and
++/// avoids missing column errors during <c>FromSql</c> materialisation.
++/// </summary>
++public record OrgUnitLookup(
++    int IdOrganizacionaJedinica,
++    string Naziv,
++    string? Mesto,
++    string? SifraOrganizacionaJedinica
++);
+@@
+-public record TaxRateLookup(
+-    string IdPoreskaStopa,
+-    string Naziv,
+-    decimal ProcenatPDV
+-);
++/// <summary>
++/// Result model for <c>spPoreskaStopaCombo</c>.
++///
++/// The stored procedure only returns the tax rate identifier and name.  The
++/// percentage is contained in the underlying table but is not part of the
++/// combo result.  Removing the unused <c>ProcenatPDV</c> property prevents EF
++/// Core from throwing when the column is absent.
++/// </summary>
++public record TaxRateLookup(
++    string IdPoreskaStopa,
++    string Naziv
++);
+@@
+-public record CostDistributionMethodLookup
+-{
+-    public int Id { get; set; }
+-    public string Naziv { get; set; } = string.Empty;
+-    public string Opis { get; set; } = string.Empty;
+-}
++/// <summary>
++/// Result model for <c>spNacinDeljenjaTroskovaCombo</c>.
++///
++/// The procedure returns a fixed set of cost distribution methods.  Align the
++/// property names with the returned columns (<c>IDNacinDeljenjaTroskova</c>,
++/// <c>Naziv</c> and <c>OpisNacina</c>) to allow automatic mapping via
++/// <c>SqlQueryRaw</c>.
++/// </summary>
++public record CostDistributionMethodLookup(
++    int IdNacinDeljenjaTroskova,
++    string Naziv,
++    string OpisNacina
++);
+*** End Patch
+*** Update File: src/ERPAccounting.Application/DTOs/ComboDtos.cs
+@@
+-public record PartnerComboDto(
+-    int IdPartner,
+-    string NazivPartnera,
+-    string? Mesto,
+-    string? Sifra,
+-    int Status
+-);
++/// <summary>
++/// DTO for partner combo values returned by <c>spPartnerComboStatusNabavka</c>.
++///
++/// The underlying stored procedure exposes the partner code under the column
++/// name <c>SifraPartner</c> and the status as <c>IDStatus</c> with an
++/// accompanying textual description <c>Opis</c>.  This DTO mirrors those
++/// column names to avoid missing column exceptions when materialising the
++/// result set.
++/// </summary>
++public record PartnerComboDto(
++    int IdPartner,
++    string NazivPartnera,
++    string? Mesto,
++    string? SifraPartner,
++    int IdStatus,
++    string? Opis
++);
+@@
+-public record OrgUnitComboDto(
+-    int IdOrganizacionaJedinica,
+-    string Naziv,
+-    string? Mesto,
+-    string? Sifra
+-);
++/// <summary>
++/// DTO for organisational unit combo values returned by
++/// <c>spOrganizacionaJedinicaCombo</c>.
++/// 
++/// The stored procedure returns the warehouse code in the column
++/// <c>SifraOrganizacionaJedinica</c> rather than the generic <c>Sifra</c> used
++/// previously.  Renaming the property here ensures deserialisation from the
++/// stored procedure result succeeds.
++/// </summary>
++public record OrgUnitComboDto(
++    int IdOrganizacionaJedinica,
++    string Naziv,
++    string? Mesto,
++    string? SifraOrganizacionaJedinica
++);
+@@
+-public record TaxRateComboDto(
+-    string IdPoreskaStopa,
+-    string Naziv,
+-    decimal ProcenatPDV
+-);
++/// <summary>
++/// DTO for tax rate combo values returned by <c>spPoreskaStopaCombo</c>.
++///
++/// Only the identifier and name are provided by the stored procedure.  The
++/// percentage is available on the table but is not part of the combo result.
++/// </summary>
++public record TaxRateComboDto(
++    string IdPoreskaStopa,
++    string Naziv
++);
+@@
+-// ══════════════════════════════════════════════════
+-// SP 10: spNacinDeljenjaTroskovaCombo (3 fiksne vrednosti: 1, 2, 3)
+-public record CostDistributionMethodComboDto
+-{
+-    public int Id { get; set; } // 1, 2, 3
+-    public string Naziv { get; set; } = string.Empty;
+-    public string Opis { get; set; } = string.Empty;
+-}
++// ══════════════════════════════════════════════════
++// SP 10: spNacinDeljenjaTroskovaCombo (3 fiksne vrednosti: 1, 2, 3)
++/// <summary>
++/// DTO for cost distribution methods returned by
++/// <c>spNacinDeljenjaTroskovaCombo</c>.  The procedure returns the
++/// identifier under the column <c>IDNacinDeljenjaTroskova</c> and the
++/// description under <c>OpisNacina</c>.
++/// </summary>
++public record CostDistributionMethodComboDto(
++    int IdNacinDeljenjaTroskova,
++    string Naziv,
++    string OpisNacina
++);
+*** End Patch
+*** Update File: src/ERPAccounting.Application/Services/StoredProcedureService.cs
+@@
+-        private static PartnerComboDto MapToPartnerDto(PartnerLookup source) => new(
+-            source.IdPartner,
+-            source.NazivPartnera,
+-            source.Mesto,
+-            source.Sifra,
+-            source.Status);
++        private static PartnerComboDto MapToPartnerDto(PartnerLookup source) => new(
++            source.IdPartner,
++            source.NazivPartnera,
++            source.Mesto,
++            source.SifraPartner,
++            source.IdStatus,
++            source.Opis);
+@@
+-        private static OrgUnitComboDto MapToOrgUnitDto(OrgUnitLookup source) => new(
+-            source.IdOrganizacionaJedinica,
+-            source.Naziv,
+-            source.Mesto,
+-            source.Sifra);
++        private static OrgUnitComboDto MapToOrgUnitDto(OrgUnitLookup source) => new(
++            source.IdOrganizacionaJedinica,
++            source.Naziv,
++            source.Mesto,
++            source.SifraOrganizacionaJedinica);
+@@
+-        private static TaxRateComboDto MapToTaxRateDto(TaxRateLookup source) => new(
+-            source.IdPoreskaStopa,
+-            source.Naziv,
+-            source.ProcenatPDV);
++        private static TaxRateComboDto MapToTaxRateDto(TaxRateLookup source) => new(
++            source.IdPoreskaStopa,
++            source.Naziv);
+@@
+-        private static CostDistributionMethodComboDto MapToCostDistributionMethodDto(CostDistributionMethodLookup source)
+-            => new()
+-            {
+-                Id = source.Id,
+-                Naziv = source.Naziv,
+-                Opis = source.Opis
+-            };
++        private static CostDistributionMethodComboDto MapToCostDistributionMethodDto(CostDistributionMethodLookup source)
++            => new(
++                source.IdNacinDeljenjaTroskova,
++                source.Naziv,
++                source.OpisNacina
++            );
+*** End Patch
