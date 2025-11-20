@@ -1,4 +1,4 @@
-﻿using ERPAccounting.API.Extensions;
+using ERPAccounting.API.Extensions;
 using ERPAccounting.API.Middleware;
 using ERPAccounting.Application.Extensions;
 using ERPAccounting.Infrastructure.Extensions;
