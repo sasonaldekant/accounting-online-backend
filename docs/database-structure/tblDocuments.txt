@@ -1,0 +1,422 @@
+﻿USE [Genecom2024Dragicevic]
+GO
+/****** Object:  Table [dbo].[tblDokument]    Script Date: 10/12/2025 13:15:09 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[tblDokument](
+	[IDDokument] [int] IDENTITY(1,1) NOT NULL,
+	[IDVrstaDokumenta] [char](2) NOT NULL,
+	[BrojDokumenta] [varchar](30) NOT NULL,
+	[BrojDokumentaINT] [int] NOT NULL CONSTRAINT [DF_tblDokument_BrojDokumentaINT]  DEFAULT ((0)),
+	[Godina] [int] NULL,
+	[Datum] [datetime] NOT NULL,
+	[IDPartner] [int] NULL,
+	[IDOrganizacionaJedinica] [int] NOT NULL,
+	[IDInterniPartner] [int] NULL,
+	[DatumValute] [datetime] NULL,
+	[DatumDPO] [datetime] NULL,
+	[PartnerBrojDokumenta] [varchar](200) NULL,
+	[PartnerDatumDokumenta] [datetime] NULL,
+	[IDRadnik] [int] NULL,
+	[IDReferentniDokument] [int] NULL,
+	[Napomena] [varchar](max) NULL,
+	[NapomenaSystem] [varchar](max) NULL,
+	[ObradjenDokument] [bit] NOT NULL CONSTRAINT [DF_tblDokument_ObradjenDokument]  DEFAULT ((0)),
+	[ProknjizenDokument] [bit] NOT NULL CONSTRAINT [DF_tblDokument_ProknjizenDokument]  DEFAULT ((0)),
+	[UserName] [varchar](20) NULL,
+	[UserLokacija] [varchar](30) NULL,
+	[UserDatum] [datetime] NULL,
+	[IDNacinPlacanja] [int] NULL,
+	[IDNacinOporezivanja] [int] NULL,
+	[IDStatus] [int] NULL,
+	[ObracunAkciza] [smallint] NOT NULL CONSTRAINT [DF_tblDokument_ObracunAkciza]  DEFAULT ((0)),
+	[ObracunPorez] [smallint] NOT NULL CONSTRAINT [DF_tblDokument_ObracunPoreza]  DEFAULT ((0)),
+	[ObracunPorezPomocni] [smallint] NOT NULL CONSTRAINT [DF_tblDokument_ObracunPorez1]  DEFAULT ((0)),
+	[IDValuta] [int] NULL,
+	[KursValute] [money] NOT NULL,
+	[AvansIznos] [money] NOT NULL CONSTRAINT [DF_tblDokument_AvansIznos]  DEFAULT ((0)),
+	[IDModelKontiranja] [int] NULL,
+	[IDMestoIsporuke] [int] NULL,
+	[TrebovanjeIDArtikal] [int] NULL,
+	[TrebovanjeKolicina] [money] NOT NULL CONSTRAINT [DF_tblDokument_TrebovanjeKolicina]  DEFAULT ((0)),
+	[IznosPrevaranti] [money] NOT NULL CONSTRAINT [DF_tblDokument_IznosPrevaranti]  DEFAULT ((0)),
+	[ZavisniTroskoviBezPDVa] [money] NOT NULL CONSTRAINT [DF_tblDokument_ZavisniTroskoviBezPoreza]  DEFAULT ((0)),
+	[ZavisniTroskoviPDV] [money] NOT NULL CONSTRAINT [DF_tblDokument_ZavisniTroskoviSaPorezom]  DEFAULT ((0)),
+	[IDTroskovnoMesto] [int] NULL,
+	[IDVozac] [int] NULL,
+	[IDVozilo] [int] NULL,
+	[IDLinijaProizvodnje] [int] NULL,
+	[IDSvrhaInternihRacuna] [int] NULL,
+	[UserNameK] [varchar](30) NULL,
+	[UserLokacijaK] [varchar](30) NULL,
+	[UserDatumK] [datetime] NULL,
+	[Bruto] [money] NULL,
+	[Neto] [money] NULL,
+	[GranicniPrelaz] [varchar](200) NULL,
+	[IDStorniranogDokumenta] [int] NULL,
+	[IDUlazniRacuniOsnovni] [int] NULL,
+	[IznosCek] [money] NOT NULL CONSTRAINT [DF_tblDokument_IznosCeka]  DEFAULT ((0)),
+	[IznosKartica] [money] NOT NULL CONSTRAINT [DF_tblDokument_IznosKartica]  DEFAULT ((0)),
+	[IznosGotovina] [money] NOT NULL CONSTRAINT [DF_tblDokument_IznosKartica1]  DEFAULT ((0)),
+	[BrojPutnogNaloga] [varchar](50) NULL,
+	[Otpremljeno] [bit] NULL,
+	[VremeRazvoza] [varchar](50) NULL,
+	[BrojDokAlt] [varchar](max) NULL,
+	[Napomena2] [varchar](max) NULL,
+	[Napomena3] [varchar](max) NULL,
+	[SinhronizovanAccess] [bit] NOT NULL CONSTRAINT [DF_tblDokument_ObradjenDokument1]  DEFAULT ((0)),
+	[Feler] [bit] NOT NULL CONSTRAINT [DF_tblDokument_Feler]  DEFAULT ((0)),
+	[IndikatorNaknadnogOdobrenja] [varchar](1) NULL,
+	[OdobrioNaknadnuIsporuku] [varchar](30) NULL,
+	[ImePrezimeMetro] [varchar](50) NULL,
+	[BrojNarudzbenice] [varchar](50) NULL,
+	[BrojProdavnice] [varchar](50) NULL,
+	[DatumNarudzbenice] [datetime] NULL,
+	[IDTekuciRacun] [int] NULL,
+	[PozivNaBroj] [varchar](50) NULL,
+	[VrednostSaRacuna] [money] NULL,
+	[PozivNaBroj1] [varchar](50) NULL,
+	[DokumentTimeStamp] [timestamp] NOT NULL,
+	[Rok] [datetime] NULL,
+	[Kilometraza] [money] NULL,
+	[Kontakt] [varchar](50) NULL,
+	[Registracija] [varchar](50) NULL,
+	[IDRadnik2] [int] NULL,
+	[DodatniRadoviIznos] [money] NULL,
+	[IDPartner2] [int] NULL,
+	[ZakljucanDokument] [bit] NULL CONSTRAINT [DF_tblDokument_ZakljucanDokument]  DEFAULT ((0)),
+	[IDVrstaTroska] [int] NULL,
+	[IDPrikolica] [int] NULL,
+	[IDMesto1] [int] NULL,
+	[IDMesto2] [int] NULL,
+	[IDMerenje] [int] NULL,
+ CONSTRAINT [PK_tblDokument] PRIMARY KEY CLUSTERED 
+(
+	[IDDokument] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH NOCHECK ADD  CONSTRAINT [FK_tblDokument_tblDokument] FOREIGN KEY([IDReferentniDokument])
+REFERENCES [dbo].[tblDokument] ([IDDokument])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblDokument]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblMerenje] FOREIGN KEY([IDMerenje])
+REFERENCES [dbo].[tblMerenje] ([IDMerenje])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblMerenje]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblMestoIsporuke] FOREIGN KEY([IDMestoIsporuke])
+REFERENCES [dbo].[tblMestoIsporuke] ([IDMestoIsporuke])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblMestoIsporuke]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblOrganizacionaJedinica] FOREIGN KEY([IDOrganizacionaJedinica])
+REFERENCES [dbo].[tblOrganizacionaJedinica] ([IDOrganizacionaJedinica])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblOrganizacionaJedinica]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblPartner] FOREIGN KEY([IDPartner])
+REFERENCES [dbo].[tblPartner] ([IDPartner])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblPartner]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblSviRadnici] FOREIGN KEY([IDRadnik])
+REFERENCES [dbo].[tblSviRadnici] ([IDRadnik])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblSviRadnici]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblSviRadnici1] FOREIGN KEY([IDVozac])
+REFERENCES [dbo].[tblSviRadnici] ([IDRadnik])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblSviRadnici1]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblSviRadnici2] FOREIGN KEY([IDRadnik2])
+REFERENCES [dbo].[tblSviRadnici] ([IDRadnik])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblSviRadnici2]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblTroskovnoMesto] FOREIGN KEY([IDTroskovnoMesto])
+REFERENCES [dbo].[tblTroskovnoMesto] ([IDTroskovnoMesto])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblTroskovnoMesto]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblValuta] FOREIGN KEY([IDValuta])
+REFERENCES [dbo].[tblValuta] ([IDValuta])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblValuta]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblVozilo] FOREIGN KEY([IDVozilo])
+REFERENCES [dbo].[tblVozilo] ([IDVozilo])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblVozilo]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH CHECK ADD  CONSTRAINT [FK_tblDokument_tblVrstaDokumenta] FOREIGN KEY([IDVrstaDokumenta])
+REFERENCES [dbo].[tblVrstaDokumenta] ([IDVrstaDokumenta])
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [FK_tblDokument_tblVrstaDokumenta]
+GO
+ALTER TABLE [dbo].[tblDokument]  WITH NOCHECK ADD  CONSTRAINT [CK_tblDokument] CHECK  (([AvansIznos]>=(0)))
+GO
+ALTER TABLE [dbo].[tblDokument] CHECK CONSTRAINT [CK_tblDokument]
+
+
+
+------------------------------------------------------------------------------------------------------------
+
+
+CREATE TABLE [dbo].[tblDokumentAvansPDV](
+	[DokumentAvansPDV] [int] IDENTITY(1,1) NOT NULL,
+	[IDDokument] [int] NOT NULL,
+	[IDPoreskaStopa] [char](2) NOT NULL,
+	[IznosPDVAvansa] [money] NOT NULL,
+	[BrojAvansa] [varchar](50) NULL,
+	[DatumAvansa] [datetime] NULL,
+	[OsnovicaPoStopi] [money] NULL,
+	[KodOslobodjenja] [varchar](50) NULL,
+	[DokumentAvansPDVTimeStamp] [timestamp] NULL,
+ CONSTRAINT [PK_tblDokumentAvansPDV] PRIMARY KEY CLUSTERED 
+(
+	[DokumentAvansPDV] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+ALTER TABLE [dbo].[tblDokumentAvansPDV]  WITH CHECK ADD  CONSTRAINT [FK_tblDokumentAvansPDV_tblDokument] FOREIGN KEY([IDDokument])
+REFERENCES [dbo].[tblDokument] ([IDDokument])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[tblDokumentAvansPDV] CHECK CONSTRAINT [FK_tblDokumentAvansPDV_tblDokument]
+GO
+ALTER TABLE [dbo].[tblDokumentAvansPDV]  WITH CHECK ADD  CONSTRAINT [FK_tblDokumentAvansPDV_tblPoreskaStopa] FOREIGN KEY([IDPoreskaStopa])
+REFERENCES [dbo].[tblPoreskaStopa] ([IDPoreskaStopa])
+GO
+ALTER TABLE [dbo].[tblDokumentAvansPDV] CHECK CONSTRAINT [FK_tblDokumentAvansPDV_tblPoreskaStopa]
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE TABLE [dbo].[tblStavkaDokumenta](
+	[IDStavkaDokumenta] [int] IDENTITY(1,1) NOT NULL,
+	[IDDokument] [int] NOT NULL,
+	[IDArtikal] [int] NOT NULL,
+	[IDOrganizacionaJedinica] [int] NULL,
+	[Kolicina] [money] NOT NULL,
+	[FakturnaCena] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_FakturnaCena]  DEFAULT ((0)),
+	[NabavnaCena] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_NabavnaCena]  DEFAULT ((0)),
+	[MagacinskaCena] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_MagacinskaCena]  DEFAULT ((0)),
+	[RabatDokument] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_RabatDokument]  DEFAULT ((0)),
+	[ProcenatAktivneMaterije] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_VPCena1]  DEFAULT ((0)),
+	[Zapremina] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_VPCena2]  DEFAULT ((0)),
+	[Akciza] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_Akciza]  DEFAULT ((0)),
+	[KoeficijentKolicine] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_KoeficijentKolicine]  DEFAULT ((1)),
+	[Rabat] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_Rabat]  DEFAULT ((0)),
+	[Marza] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_Marza]  DEFAULT ((0)),
+	[IznosMarze] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IznosMarze]  DEFAULT ((0)),
+	[ProcenatPoreza] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ProcenatPoreza]  DEFAULT ((0)),
+	[ProcenatPorezaMP] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ProcenatPoreza1]  DEFAULT ((0)),
+	[IznosPDV] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IznosPoreza]  DEFAULT ((0)),
+	[IznosPDVsaAkcizom] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ObracunatiPorez]  DEFAULT ((0)),
+	[IznosAkciza] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IznosAkciza]  DEFAULT ((0)),
+	[IDPoreskaStopa] [char](2) NULL,
+	[ZavisniTroskovi] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ZavisniTroskoviSaPorezom]  DEFAULT ((0)),
+	[ZavisniTroskoviBezPoreza] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ZavisniTroskoviBezPoreza]  DEFAULT ((0)),
+	[Iznos] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_Iznos]  DEFAULT ((0)),
+	[ValutaCena] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ValutaCena]  DEFAULT ((0)),
+	[ValutaIznos] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ValutaIznos]  DEFAULT ((0)),
+	[IDJedinicaMere] [varchar](6) NOT NULL,
+	[Pakovanje] [int] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_Pakovanje]  DEFAULT ((0)),
+	[ObracunAkciza] [smallint] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ObracunAkciza]  DEFAULT ((0)),
+	[ObracunPorez] [smallint] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ObracunPorez]  DEFAULT ((0)),
+	[IDNacinOporezivanja] [int] NULL,
+	[IDStatus] [int] NULL,
+	[VrednostObracunPDV]  AS (([obracunAkciza]&[ObracunPorez])*[IznosPDVsaAkcizom]+(~[obracunAkciza]&[ObracunPorez])*[IznosPDV]),
+	[VrednostObracunAkciza]  AS ([obracunAkciza]*[IznosAkciza]),
+	[Masa] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_Masa]  DEFAULT ((0)),
+	[Opis] [varchar](1024) NULL,
+	[ProizvodnjaKolicina] [float] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ProizvodnjaKolicina]  DEFAULT ((0)),
+	[ProizvodnjaIDJedinicaMere] [char](6) NULL,
+	[ProizvodnjaKoeficijentKolicine] [float] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ProizvodnjaKoeficijentKolicine]  DEFAULT ((0)),
+	[IDObrociNarudzbinaStavka] [int] NULL,
+	[IDVrstaObroka] [int] NULL,
+	[StavkaDokumentaTimeStamp] [timestamp] NULL,
+	[IDDnevnaStanjaMagacinskoPromeneM1] [int] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IDDnevnaStanjaMagacinskoPromene1]  DEFAULT ((0)),
+	[IDDnevnaStanjaMagacinskoPromeneM2] [int] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IDDnevnaStanjaMagacinskoPromeneM11]  DEFAULT ((0)),
+	[IDDnevnaStanjaRobnoPromeneM1] [int] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IDDnevnaStanjaMagacinskoPromeneM11_1]  DEFAULT ((0)),
+	[IDDnevnaStanjaRobnoPromeneM2] [int] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IDDnevnaStanjaRobnoPromeneM11]  DEFAULT ((0)),
+	[IDDnevnaStanjaVPPromeneM1] [int] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IDDnevnaStanjaRobnoPromeneM11_1]  DEFAULT ((0)),
+	[IDDnevnaStanjaVPPromeneM2] [int] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_IDDnevnaStanjaRobnoPromeneM21]  DEFAULT ((0)),
+	[ObracunPorezPomocni] [smallint] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_ObracunPorez1]  DEFAULT ((0)),
+	[IDUlazniRacuniOsnovni] [int] NULL,
+	[RabatAkcija] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_RabatAkcija]  DEFAULT ((0)),
+	[IsporukaRobe] [bit] NULL,
+	[Rabat2] [money] NOT NULL CONSTRAINT [DF_tblStavkaDokumenta_Rabat1]  DEFAULT ((0)),
+	[ZadnjaNabavnaCena] [money] NULL CONSTRAINT [DF_tblStavkaDokumenta_NabavnaCena1]  DEFAULT ((0)),
+	[ProsecnaCena] [money] NULL CONSTRAINT [DF_tblStavkaDokumenta_ZadnjaNabavnaCena1]  DEFAULT ((0)),
+	[ValutaBrojDana] [int] NULL,
+	[ValutaDatum] [datetime] NULL,
+	[VrednostBezPDV] [money] NULL CONSTRAINT [DF_tblStavkaDokumenta_VrednostBezPDV]  DEFAULT ((0)),
+	[ObaveznaOprema] [varchar](50) NULL,
+	[DopunskaOprema] [varchar](50) NULL,
+	[ProsecnaCenaOJ] [money] NULL,
+	[PovratnaNaknada] [money] NULL CONSTRAINT [DF_tblStavkaDokumenta_PovratnaNaknada]  DEFAULT ((0)),
+	[StaraCena] [money] NULL,
+	[IDBoja] [int] NULL,
+ CONSTRAINT [PK_tblStavkaDokumenta] PRIMARY KEY CLUSTERED 
+(
+	[IDStavkaDokumenta] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta]  WITH CHECK ADD  CONSTRAINT [FK_tblStavkaDokumenta_tblArtikal] FOREIGN KEY([IDArtikal])
+REFERENCES [dbo].[tblArtikal] ([IDArtikal])
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta] CHECK CONSTRAINT [FK_tblStavkaDokumenta_tblArtikal]
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta]  WITH CHECK ADD  CONSTRAINT [FK_tblStavkaDokumenta_tblDokument] FOREIGN KEY([IDDokument])
+REFERENCES [dbo].[tblDokument] ([IDDokument])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta] CHECK CONSTRAINT [FK_tblStavkaDokumenta_tblDokument]
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta]  WITH CHECK ADD  CONSTRAINT [FK_tblStavkaDokumenta_tblJedinicaMere] FOREIGN KEY([IDJedinicaMere])
+REFERENCES [dbo].[tblJedinicaMere] ([IDJedinicaMere])
+ON UPDATE CASCADE
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta] CHECK CONSTRAINT [FK_tblStavkaDokumenta_tblJedinicaMere]
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta]  WITH CHECK ADD  CONSTRAINT [FK_tblStavkaDokumenta_tblPoreskaStopa] FOREIGN KEY([IDPoreskaStopa])
+REFERENCES [dbo].[tblPoreskaStopa] ([IDPoreskaStopa])
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta] CHECK CONSTRAINT [FK_tblStavkaDokumenta_tblPoreskaStopa]
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta]  WITH NOCHECK ADD  CONSTRAINT [CK_tblStavkaDokumenta] CHECK  (([Kolicina]<>(0)))
+GO
+ALTER TABLE [dbo].[tblStavkaDokumenta] CHECK CONSTRAINT [CK_tblStavkaDokumenta]
+
+
+-------------------------------------------------------------------------------------------------------------
+
+
+CREATE TABLE [dbo].[tblDokumentTroskovi](
+	[IDDokumentTroskovi] [int] IDENTITY(1,1) NOT NULL,
+	[IDDokument] [int] NOT NULL,
+	[IDPartner] [int] NOT NULL,
+	[IDVrstaDokumenta] [char](2) NOT NULL,
+	[BrojDokumenta] [varchar](max) NOT NULL,
+	[DatumDPO] [datetime] NOT NULL,
+	[DatumValute] [datetime] NULL,
+	[Opis] [varchar](max) NULL,
+	[IDStatus] [int] NOT NULL,
+	[IDValuta] [int] NULL,
+	[Kurs] [money] NULL CONSTRAINT [DF_tblDokumentTroskovi_Kurs]  DEFAULT ((0)),
+	[DokumentTroskoviTimeStamp] [timestamp] NULL,
+ CONSTRAINT [PK_tblDokumentTroskovi] PRIMARY KEY CLUSTERED 
+(
+	[IDDokumentTroskovi] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+ALTER TABLE [dbo].[tblDokumentTroskovi]  WITH NOCHECK ADD  CONSTRAINT [FK_tblDokumentTroskovi_tblDokument] FOREIGN KEY([IDDokument])
+REFERENCES [dbo].[tblDokument] ([IDDokument])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[tblDokumentTroskovi] CHECK CONSTRAINT [FK_tblDokumentTroskovi_tblDokument]
+GO
+ALTER TABLE [dbo].[tblDokumentTroskovi]  WITH CHECK ADD  CONSTRAINT [FK_tblDokumentTroskovi_tblPartner] FOREIGN KEY([IDPartner])
+REFERENCES [dbo].[tblPartner] ([IDPartner])
+GO
+ALTER TABLE [dbo].[tblDokumentTroskovi] CHECK CONSTRAINT [FK_tblDokumentTroskovi_tblPartner]
+GO
+ALTER TABLE [dbo].[tblDokumentTroskovi]  WITH CHECK ADD  CONSTRAINT [FK_tblDokumentTroskovi_tblValuta] FOREIGN KEY([IDValuta])
+REFERENCES [dbo].[tblValuta] ([IDValuta])
+GO
+ALTER TABLE [dbo].[tblDokumentTroskovi] CHECK CONSTRAINT [FK_tblDokumentTroskovi_tblValuta]
+GO
+ALTER TABLE [dbo].[tblDokumentTroskovi]  WITH NOCHECK ADD  CONSTRAINT [FK_tblDokumentTroskovi_tblVrstaDokumenta] FOREIGN KEY([IDVrstaDokumenta])
+REFERENCES [dbo].[tblVrstaDokumenta] ([IDVrstaDokumenta])
+ON UPDATE CASCADE
+GO
+ALTER TABLE [dbo].[tblDokumentTroskovi] CHECK CONSTR
+
+--------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE [dbo].[tblDokumentTroskoviStavka](
+	[IDDokumentTroskoviStavka] [int] IDENTITY(1,1) NOT NULL,
+	[IDDokumentTroskovi] [int] NOT NULL,
+	[IDNacinDeljenjaTroskova] [int] NOT NULL,
+	[SveStavke] [bit] NOT NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_SveStavke]  DEFAULT ((1)),
+	[Iznos] [money] NOT NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_Iznos]  DEFAULT ((0)),
+	[IDUlazniRacuniIzvedeni] [int] NOT NULL,
+	[IDStatus] [int] NOT NULL,
+	[ObracunPorezTroskovi] [int] NOT NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_ObracunPorezTroskovi]  DEFAULT ((0)),
+	[DodajPDVNaTroskove] [int] NOT NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_DodajPDVNaTroskove]  DEFAULT ((0)),
+	[DokumentTroskoviStavkaTimeStamp] [timestamp] NULL,
+	[IznosValuta] [money] NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_IznosValuta]  DEFAULT ((0)),
+	[Gotovina] [money] NOT NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_Gotovina]  DEFAULT ((0)),
+	[Kartica] [money] NOT NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_Kartica]  DEFAULT ((0)),
+	[Virman] [money] NOT NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_Virman]  DEFAULT ((0)),
+	[Kolicina] [money] NULL CONSTRAINT [DF_tblDokumentTroskoviStavka_Kolicina]  DEFAULT ((0)),
+ CONSTRAINT [PK_tblDokumentTroskoviStavka] PRIMARY KEY CLUSTERED 
+(
+	[IDDokumentTroskoviStavka] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+ALTER TABLE [dbo].[tblDokumentTroskoviStavka]  WITH CHECK ADD  CONSTRAINT [FK_tblDokumentTroskoviStavka_tblDokumentTroskovi] FOREIGN KEY([IDDokumentTroskovi])
+REFERENCES [dbo].[tblDokumentTroskovi] ([IDDokumentTroskovi])
+GO
+ALTER TABLE [dbo].[tblDokumentTroskoviStavka] CHECK CONSTRAINT [FK_tblDokumentTroskoviStavka_tblDokumentTros
+
+--------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE [dbo].[tblDokumentTroskoviStavkaPDV](
+	[IDDokumentTroskoviStavkaPDV] [int] IDENTITY(1,1) NOT NULL,
+	[IDDokumentTroskoviStavka] [int] NOT NULL,
+	[IDPoreskaStopa] [char](2) NOT NULL,
+	[IznosPDV] [money] NOT NULL CONSTRAINT [DF_tblDokumentTroskoviStavkaPDV_IznosPDV]  DEFAULT ((0)),
+	[DokumentTroskoviStavkaPDVTimeStamp] [timestamp] NULL,
+ CONSTRAINT [PK_tblDokumentTroskoviStavkaPDV] PRIMARY KEY CLUSTERED 
+(
+	[IDDokumentTroskoviStavkaPDV] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY],
+ CONSTRAINT [IX_tblDokumentTroskoviStavkaPDV_2] UNIQUE NONCLUSTERED 
+(
+	[IDDokumentTroskoviStavka] ASC,
+	[IDPoreskaStopa] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+ALTER TABLE [dbo].[tblDokumentTroskoviStavkaPDV]  WITH CHECK ADD  CONSTRAINT [FK_tblDokumentTroskoviStavkaPDV_tblDokumentTroskoviStavka] FOREIGN KEY([IDDokumentTroskoviStavka])
+REFERENCES [dbo].[tblDokumentTroskoviStavka] ([IDDokumentTroskoviStavka])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[tblDokumentTroskoviStavkaPDV] CHECK CONSTRAINT [FK_tblDokumentTroskoviStavkaPDV_tblDokumentTroskoviStavka]
+GO
+ALTER TABLE [dbo].[tblDokumentTroskoviStavkaPDV]  WITH CHECK ADD  CONSTRAINT [FK_tblDokumentTroskoviStavkaPDV_tblPoreskaStopa] FOREIGN KEY([IDPoreskaStopa])
+REFERENCES [dbo].[tblPoreskaStopa] ([IDPoreskaStopa])
+GO
+ALTER TABLE [dbo].[tblDokumentTroskoviStavkaPDV] CHECK CONSTRAINT [FK_tblDokumentTroskoviStavkaPDV_tblPoreskaStopa]
+
+--------------------------------------------------------------------------------------------------------------------
+

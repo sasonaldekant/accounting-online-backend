@@ -1,0 +1,536 @@
+﻿USE [Genecom2024Dragicevic]
+GO
+/****** Object:  Table [dbo].[tblPartner]    Script Date: 10/12/2025 14:29:43 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[tblPartner](
+	[IDPartner] [int] IDENTITY(1,1) NOT NULL,
+	[SifraPartner] [varchar](13) NOT NULL,
+	[NazivPartnera] [varchar](255) NOT NULL,
+	[Adresa] [varchar](255) NULL,
+	[IDMesto] [int] NOT NULL,
+	[PIB] [varchar](20) NOT NULL,
+	[Telefon] [varchar](50) NULL,
+	[FAX] [varchar](50) NULL,
+	[IDReferent] [int] NULL,
+	[Napomena] [varchar](1024) NULL,
+	[Kontakt] [varchar](255) NULL,
+	[IDStatus] [int] NOT NULL CONSTRAINT [DF_tblPartner_Status]  DEFAULT ((1)),
+	[IDDrzava] [int] NULL,
+	[Rabat] [float] NOT NULL CONSTRAINT [DF_tblPartner_Rabat]  DEFAULT ((0)),
+	[Kasa] [float] NOT NULL CONSTRAINT [DF_tblPartner_Kasa]  DEFAULT ((0)),
+	[IDNacinPlacanja] [int] NULL,
+	[IDCenovnaGrupa] [smallint] NULL,
+	[Konto] [varchar](6) NULL,
+	[IDPartnerGlavni] [int] NULL,
+	[PDVBroj] [varchar](20) NULL,
+	[MaticniBroj] [varchar](20) NULL,
+	[SifraSort] [varchar](255) NULL,
+	[IDVrstaPartnera] [int] NOT NULL,
+	[Proizvodjac] [int] NULL,
+	[BrojUgovora] [varchar](15) NULL,
+	[DatumUgovora] [datetime] NULL,
+	[Kredit] [money] NOT NULL CONSTRAINT [DF_tblPartner_Kredit]  DEFAULT ((0)),
+	[DatumOtvaranja] [datetime] NULL,
+	[NjihovaSifraZaNas] [varchar](20) NULL,
+	[BezZabrane] [int] NULL CONSTRAINT [DF_tblPartner_BezZabrane]  DEFAULT ((0)),
+	[TolerancijaValute] [int] NULL,
+	[PartnerTimeStamp] [timestamp] NOT NULL,
+	[IDSinhINS] [int] NULL CONSTRAINT [DF_tblPartner_IDSinhINS]  DEFAULT ((0)),
+	[IDSinhUPD] [int] NULL CONSTRAINT [DF_tblPartner_IDSinhUPD]  DEFAULT ((0)),
+	[INDSinh] [int] NULL CONSTRAINT [DF_tblPartner_INDSinh]  DEFAULT ((0)),
+	[OdlozenoPlacanje] [bit] NULL,
+	[KategorijaKupca] [varchar](1) NULL,
+	[StaraSifra] [varchar](50) NULL,
+ CONSTRAINT [PK_tblPartner] PRIMARY KEY CLUSTERED 
+(
+	[IDPartner] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY],
+ CONSTRAINT [IX_tblPartner] UNIQUE NONCLUSTERED 
+(
+	[SifraPartner] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'SifraPartner'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'NazivPartnera'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'Adresa'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblMesto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'IDMesto'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'PIB'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'Telefon'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'FAX'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblSviRadnici' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'IDReferent'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'Napomena'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'Kontakt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblStatus' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'IDStatus'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblDrzava' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'IDDrzava'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'Rabat'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'Kasa'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblNacinPlacanja' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'IDNacinPlacanja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'IDCenovnaGrupa'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'Konto'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'IDPartnerGlavni'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'PDVBroj'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'MaticniBroj'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'SifraSort'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'IDVrstaPartnera'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'Proizvodjac'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPartner', @level2type=N'COLUMN',@level2name=N'OdlozenoPlacanje'
+GO
+ALTER TABLE [dbo].[tblPartner]  WITH CHECK ADD  CONSTRAINT [FK_tblPartner_tblDrzava] FOREIGN KEY([IDDrzava])
+REFERENCES [dbo].[tblDrzava] ([IDDrzava])
+GO
+ALTER TABLE [dbo].[tblPartner] CHECK CONSTRAINT [FK_tblPartner_tblDrzava]
+GO
+ALTER TABLE [dbo].[tblPartner]  WITH CHECK ADD  CONSTRAINT [FK_tblPartner_tblMesto] FOREIGN KEY([IDMesto])
+REFERENCES [dbo].[tblMesto] ([IDMesto])
+GO
+ALTER TABLE [dbo].[tblPartner] CHECK CONSTRAINT [FK_tblPartner_tblMesto]
+GO
+ALTER TABLE [dbo].[tblPartner]  WITH NOCHECK ADD  CONSTRAINT [FK_tblPartner_tblPartner] FOREIGN KEY([IDPartnerGlavni])
+REFERENCES [dbo].[tblPartner] ([IDPartner])
+GO
+ALTER TABLE [dbo].[tblPartner] CHECK CONSTRAINT [FK_tblPartner_tblPartner]
+GO
+ALTER TABLE [dbo].[tblPartner]  WITH CHECK ADD  CONSTRAINT [FK_tblPartner_tblStatus] FOREIGN KEY([IDStatus])
+REFERENCES [dbo].[tblStatus] ([IDStatus])
+GO
+ALTER TABLE [dbo].[tblPartner] CHECK CONSTRAINT [FK_tblPartner_tblStatus]
+GO
+ALTER TABLE [dbo].[tblPartner]  WITH CHECK ADD  CONSTRAINT [FK_tblPartner_tblSviRadnici] FOREIGN KEY([IDReferent])
+REFERENCES [dbo].[tblSviRadnici] ([IDRadnik])
+GO
+ALTER TABLE [dbo].[tblPartner] CHECK CONSTRAINT [FK_tblPartner_tblSviRadnici]
+GO
+ALTER TABLE [dbo].[tblPartner]  WITH CHECK ADD  CONSTRAINT [FK_tblPartner_tblVrsta] FOREIGN KEY([IDVrstaPartnera])
+REFERENCES [dbo].[tblVrsta] ([IDVrsta])
+GO
+ALTER TABLE [dbo].[tblPartner] CHECK CONSTRAINT [FK_tblPartner_tblVrsta]
+
+------------------------------------------------------------------------------------
+
+CREATE TABLE [dbo].[tblOrganizacionaJedinica](
+	[IDOrganizacionaJedinica] [int] IDENTITY(1,1) NOT NULL,
+	[SifraOrganizacionaJedinica] [varchar](6) NOT NULL,
+	[Naziv] [varchar](50) NOT NULL,
+	[Adresa] [varchar](50) NULL,
+	[IDMesto] [int] NOT NULL,
+	[IDTeritorija] [int] NULL,
+	[IDRadnik] [int] NULL,
+	[IDVrstaCene] [smallint] NOT NULL,
+	[DatotekaZaPrijem] [varchar](255) NULL,
+	[DatotekaZaSlanje] [varchar](255) NULL,
+	[Email] [varchar](255) NULL,
+	[IDPartner] [int] NULL,
+	[AkciznoSkladiste] [bit] NOT NULL CONSTRAINT [DF_tblOrganizacionaJedinica_AkciznoSkladiste]  DEFAULT ((0)),
+	[Telefon] [varchar](17) NULL,
+	[Napomena] [varchar](255) NULL,
+	[IDVrstaMagacina] [int] NULL,
+	[IDJedinicaMereVrsta] [int] NULL,
+	[SifraSort] [varchar](6) NULL,
+	[OrganizacionaJedinicaTimeStamp] [timestamp] NULL,
+	[Kasa] [varchar](50) NULL,
+	[TelefonKasa] [varchar](17) NULL,
+	[DefaultOJZaUlaz] [bit] NULL,
+	[IDSinhINS] [int] NULL CONSTRAINT [DF_tblOrganizacionaJedinica_IDSinhINS]  DEFAULT ((0)),
+	[IDSinhUPD] [int] NULL CONSTRAINT [DF_tblOrganizacionaJedinica_IDSinhUPD]  DEFAULT ((0)),
+	[INDSinh] [int] NULL CONSTRAINT [DF_tblOrganizacionaJedinica_INDSinh]  DEFAULT ((0)),
+	[IDNadredjenaOrganizacionaJedinica] [int] NULL,
+ CONSTRAINT [PK_tblOrganizacionaJedinica] PRIMARY KEY CLUSTERED 
+(
+	[IDOrganizacionaJedinica] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'SifraOrganizacionaJedinica'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'Naziv'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'Adresa'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblMesto' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'IDMesto'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblTeritorija' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'IDTeritorija'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblSviRadnici' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'IDRadnik'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblVrstaCene' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'IDVrstaCene'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'DatotekaZaPrijem'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'DatotekaZaSlanje'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'Email'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblPartner' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'IDPartner'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'AkciznoSkladiste'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'Telefon'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'Napomena'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'IDVrstaMagacina'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'IDJedinicaMereVrsta'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'SifraSort'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'Kasa'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblOrganizacionaJedinica', @level2type=N'COLUMN',@level2name=N'TelefonKasa'
+
+
+------------------------------------------------------------------------------------
+
+
+CREATE TABLE [dbo].[tblNacinOporezivanja](
+	[IDNacinOporezivanja] [int] NOT NULL,
+	[Opis] [varchar](255) NOT NULL,
+	[Znak] [int] NOT NULL,
+	[ObracunAkciza] [smallint] NULL,
+	[ObracunPorez] [smallint] NULL,
+	[Napomena] [varchar](255) NULL,
+	[ObracunPorezPomocni] [smallint] NULL,
+	[NacinOporezivanjaTimeStamp] [timestamp] NULL,
+	[IDSinhINS] [int] NULL CONSTRAINT [DF_tblNacinOporezivanja_IDSinhINS]  DEFAULT ((0)),
+	[IDSinhUPD] [int] NULL CONSTRAINT [DF_tblNacinOporezivanja_IDSinhUPD]  DEFAULT ((0)),
+	[INDSinh] [int] NULL CONSTRAINT [DF_tblNacinOporezivanja_INDSinh]  DEFAULT ((0)),
+ CONSTRAINT [PK_tblNacinOporezivanja] PRIMARY KEY CLUSTERED 
+(
+	[IDNacinOporezivanja] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblNacinOporezivanja', @level2type=N'COLUMN',@level2name=N'IDNacinOporezivanja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblNacinOporezivanja', @level2type=N'COLUMN',@level2name=N'Opis'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblNacinOporezivanja', @level2type=N'COLUMN',@level2name=N'Znak'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblNacinOporezivanja', @level2type=N'COLUMN',@level2name=N'ObracunAkciza'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblNacinOporezivanja', @level2type=N'COLUMN',@level2name=N'ObracunPorez'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblNacinOporezivanja', @level2type=N'COLUMN',@level2name=N'Napomena'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblNacinOporezivanja', @level2type=N'COLUMN',@level2name=N'ObracunPorezPomocni'
+
+------------------------------------------------------------------------------------
+
+CREATE TABLE [dbo].[tblValuta](
+	[IDValuta] [int] IDENTITY(1,1) NOT NULL,
+	[Oznaka] [char](5) NOT NULL,
+	[NazivValute] [varchar](50) NOT NULL,
+	[NazivZemlje] [varchar](50) NULL,
+	[Paritet] [int] NULL,
+	[Prikaz] [int] NULL CONSTRAINT [DF_tblValuta_Prikaz]  DEFAULT ((-1)),
+	[Sort] [int] NULL CONSTRAINT [DF_tblValuta_Sort]  DEFAULT ((99)),
+	[ValutaTimeStamp] [timestamp] NULL,
+	[IDSinhINS] [int] NULL CONSTRAINT [DF_tblValuta_IDSinhINS]  DEFAULT ((0)),
+	[IDSinhUPD] [int] NULL CONSTRAINT [DF_tblValuta_IDSinhUPD]  DEFAULT ((0)),
+	[INDSinh] [int] NULL CONSTRAINT [DF_tblValuta_INDSinh]  DEFAULT ((0)),
+ CONSTRAINT [PK_tblValuta] PRIMARY KEY CLUSTERED 
+(
+	[IDValuta] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY],
+ CONSTRAINT [IX_tblValuta] UNIQUE NONCLUSTERED 
+(
+	[Oznaka] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblValuta', @level2type=N'COLUMN',@level2name=N'Oznaka'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblValuta', @level2type=N'COLUMN',@level2name=N'NazivValute'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblValuta', @level2type=N'COLUMN',@level2name=N'NazivZemlje'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblValuta', @level2type=N'COLUMN',@level2name=N'Paritet'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblValuta', @level2type=N'COLUMN',@level2name=N'Prikaz'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblValuta', @level2type=N'COLUMN',@level2name=N'Sort'
+
+------------------------------------------------------------------------------------
+
+
+CREATE TABLE [dbo].[tblSviRadnici](
+	[IDRadnik] [int] IDENTITY(1,1) NOT NULL,
+	[IDOrganizacionaJedinica] [int] NOT NULL,
+	[IDRadnaJedinica] [int] NULL,
+	[SifraRadnika] [varchar](10) NOT NULL,
+	[ImeRadnika] [varchar](50) NOT NULL,
+	[PrezimeRadnika] [varchar](50) NULL,
+	[ImeRoditelja] [varchar](50) NULL,
+	[DevojackoPrezime] [varchar](50) NULL,
+	[Pol] [varchar](2) NULL,
+	[JMBG] [varchar](50) NULL,
+	[DatumRodjenja] [datetime] NULL,
+	[IDOpstinaRodjenja] [int] NULL,
+	[IDMestoRodjenja] [int] NULL,
+	[IDOpstinaStanovanja] [int] NULL,
+	[IDMestoStanovanja] [int] NULL,
+	[IDMesnaZajednica] [int] NULL,
+	[IDUlicaStanovanja] [int] NULL,
+	[BrojStana] [varchar](50) NULL,
+	[IDStrucnaSprema] [int] NULL,
+	[IDSkola] [int] NULL,
+	[IDZanimanjeRadnika] [int] NULL,
+	[IDRadnoMesto] [int] NULL,
+	[Koeficijent] [money] NULL,
+	[LicniKoeficijent] [money] NULL,
+	[OznakaInvalidnosti] [varchar](10) NULL,
+	[BrojKnjizice] [varchar](50) NULL,
+	[BrojLicneKarte] [varchar](50) NULL,
+	[IzdataOd] [varchar](50) NULL,
+	[BrojRadneKnjizice] [varchar](50) NULL,
+	[Narodnost] [varchar](50) NULL,
+	[BracnoStanje] [varchar](50) NULL,
+	[KonfesijaVirman] [int] NULL,
+	[Slava] [varchar](50) NULL,
+	[DatumSlave] [datetime] NULL,
+	[KrvnaGrupa] [varchar](10) NULL,
+	[DavalacPuta] [bit] NULL CONSTRAINT [DF_tblSviRadnici_DavalacPuta]  DEFAULT ((0)),
+	[StazGodina] [int] NULL,
+	[StazMeseci] [int] NULL,
+	[StazDana] [int] NULL,
+	[StazGodinaPreduzece] [int] NULL,
+	[StazMeseciPreduzece] [int] NULL,
+	[StazDanaPreduzece] [int] NULL,
+	[IDBanka] [int] NULL,
+	[BrojTekucegRacuna] [varchar](50) NULL,
+	[DatumZaposlenja] [datetime] NULL,
+	[Status] [varchar](20) NULL,
+	[DatumOdjave] [datetime] NULL,
+	[RazlogOdjave] [varchar](50) NULL,
+	[BrojDanaGodOdmora] [int] NULL,
+	[Sindikat] [varchar](20) NULL,
+	[Telefon] [varchar](20) NULL,
+	[email] [varchar](20) NULL,
+	[Mobilni] [varchar](20) NULL,
+	[SviRadniciTimeStamp] [timestamp] NULL,
+	[TrgovackiPutnik] [bit] NOT NULL CONSTRAINT [DF_tblSviRadnici_TrgovackiPutnik]  DEFAULT ((0)),
+	[Teritorija] [varchar](20) NULL,
+	[IDSinhINS] [int] NULL CONSTRAINT [DF_tblSviRadnici_IDSinhINS]  DEFAULT ((0)),
+	[IDSinhUPD] [int] NULL CONSTRAINT [DF_tblSviRadnici_IDSinhUPD]  DEFAULT ((0)),
+	[INDSinh] [int] NULL CONSTRAINT [DF_tblSviRadnici_INDSinh]  DEFAULT ((0)),
+ CONSTRAINT [PK_tblSviRadnici] PRIMARY KEY CLUSTERED 
+(
+	[IDRadnik] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDOrganizacionaJedinica'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDRadnaJedinica'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'SifraRadnika'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'ImeRadnika'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'PrezimeRadnika'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'ImeRoditelja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'DevojackoPrezime'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'Pol'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'JMBG'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'DatumRodjenja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDOpstinaRodjenja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDMestoRodjenja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDOpstinaStanovanja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDMestoStanovanja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDMesnaZajednica'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDUlicaStanovanja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'BrojStana'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDStrucnaSprema'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDSkola'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDZanimanjeRadnika'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDRadnoMesto'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'Koeficijent'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'LicniKoeficijent'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'OznakaInvalidnosti'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'BrojKnjizice'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'BrojLicneKarte'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IzdataOd'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'BrojRadneKnjizice'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'Narodnost'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'BracnoStanje'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'KonfesijaVirman'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'Slava'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'DatumSlave'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'KrvnaGrupa'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'DavalacPuta'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'StazGodina'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'StazMeseci'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'StazDana'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'StazGodinaPreduzece'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'StazMeseciPreduzece'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'StazDanaPreduzece'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'IDBanka'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'BrojTekucegRacuna'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'DatumZaposlenja'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'Status'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'DatumOdjave'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'RazlogOdjave'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'BrojDanaGodOdmora'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'Sindikat'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'Telefon'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'email'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblSviRadnici', @level2type=N'COLUMN',@level2name=N'Mobilni'
+
+
+------------------------------------------------------------------------------------
+
+
+CREATE TABLE [dbo].[tblUlazniRacuniIzvedeni](
+	[IDUlazniRacuniIzvedeni] [int] IDENTITY(1,1) NOT NULL,
+	[IDUlazniRacuniOsnovni] [int] NOT NULL,
+	[Opis] [varchar](255) NULL,
+	[IDSpecifikacija] [int] NOT NULL,
+	[TroskoviZaDokument] [bit] NOT NULL CONSTRAINT [DF_tblUlazniRacuniIzvedeni_TroskoviZaDokument]  DEFAULT ((0)),
+	[UlazniRacuniIzvedeniTimeStamp] [timestamp] NULL,
+	[IDSinhINS] [int] NULL CONSTRAINT [DF_tblUlazniRacuniIzvedeni_IDSinhINS]  DEFAULT ((0)),
+	[IDSinhUPD] [int] NULL CONSTRAINT [DF_tblUlazniRacuniIzvedeni_IDSinhUPD]  DEFAULT ((0)),
+	[INDSinh] [int] NULL CONSTRAINT [DF_tblUlazniRacuniIzvedeni_INDSinh]  DEFAULT ((0)),
+	[PN] [int] NULL,
+ CONSTRAINT [PK_tblUlazniRacuniIzvedeni] PRIMARY KEY CLUSTERED 
+(
+	[IDUlazniRacuniIzvedeni] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'tblUlazniRacuniOsnovni' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblUlazniRacuniIzvedeni', @level2type=N'COLUMN',@level2name=N'IDUlazniRacuniOsnovni'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblUlazniRacuniIzvedeni', @level2type=N'COLUMN',@level2name=N'Opis'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblUlazniRacuniIzvedeni', @level2type=N'COLUMN',@level2name=N'IDSpecifikacija'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblUlazniRacuniIzvedeni', @level2type=N'COLUMN',@level2name=N'TroskoviZaDokument'
+GO
+ALTER TABLE [dbo].[tblUlazniRacuniIzvedeni]  WITH CHECK ADD  CONSTRAINT [FK_tblUlazniRacuniIzvedeni_tblUlazniRacuniOsnovni] FOREIGN KEY([IDUlazniRacuniOsnovni])
+REFERENCES [dbo].[tblUlazniRacuniOsnovni] ([IDUlazniRacuniOsnovni])
+GO
+ALTER TABLE [dbo].[tblUlazniRacuniIzvedeni] CHECK CONSTRAINT [FK_tblUlazniRacuniIzvedeni_tblUlazniRacuniOsnovni]
+
+
+------------------------------------------------------------------------------------
+
+
+CREATE TABLE [dbo].[tblPoreskaStopa](
+	[IDPoreskaStopa] [char](2) NOT NULL,
+	[Naziv] [varchar](100) NOT NULL,
+	[ProcenatPoreza] [float] NOT NULL CONSTRAINT [DF_tblPoreskaStopa_ProcenatPoreza]  DEFAULT ((0)),
+	[PoreskaStopaTimeStamp] [timestamp] NULL,
+	[IDPoreskaStopaAutonumber] [int] IDENTITY(1,1) NOT NULL,
+	[IDSinhINS] [int] NULL CONSTRAINT [DF_tblPoreskaStopa_IDSinhINS]  DEFAULT ((0)),
+	[IDSinhUPD] [int] NULL CONSTRAINT [DF_tblPoreskaStopa_IDSinhUPD]  DEFAULT ((0)),
+	[INDSinh] [int] NULL CONSTRAINT [DF_tblPoreskaStopa_INDSinh]  DEFAULT ((0)),
+	[HcpStopa] [int] NULL,
+ CONSTRAINT [PK_tblPoreskaStopa] PRIMARY KEY CLUSTERED 
+(
+	[IDPoreskaStopa] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPoreskaStopa', @level2type=N'COLUMN',@level2name=N'IDPoreskaStopa'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPoreskaStopa', @level2type=N'COLUMN',@level2name=N'Naziv'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Sinh' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPoreskaStopa', @level2type=N'COLUMN',@level2name=N'ProcenatPoreza'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N' ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'tblPoreskaStopa', @level2type=N'COLUMN',@level2name=N'IDPoreskaStopaAutonumber'

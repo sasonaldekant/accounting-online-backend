@@ -1,0 +1,291 @@
+﻿USE [Genecom2024Dragicevic]
+GO
+/****** Object:  StoredProcedure [dbo].[spPartnerComboStatusNabavka]    Script Date: 10/12/2025 13:03:00 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+CREATE PROCEDURE [dbo].[spPartnerComboStatusNabavka] AS
+
+SELECT			dbo.tblPartner.NazivPartnera AS [NAZIV PARTNERA], 
+						dbo.tblMesto.NazivMesta AS MESTO, 
+						dbo.tblPartner.IDPartner, 
+            dbo.tblStatus.Opis, 
+            dbo.tblPartner.IDStatus, 
+            dbo.tblStatus.IDNacinOporezivanjaNabavka, 
+            dbo.tblStatus.ObracunAkciza, 
+            dbo.tblStatus.ObracunPorez, 
+            dbo.tblPartner.IDReferent,
+            dbo.tblPartner.SifraPartner AS ŠIFRA
+
+FROM        dbo.tblPartner 
+						INNER JOIN dbo.tblStatus 
+						ON dbo.tblPartner.IDStatus = dbo.tblStatus.IDStatus 
+						LEFT OUTER JOIN dbo.tblMesto 
+						ON dbo.tblPartner.IDMesto = dbo.tblMesto.IDMesto
+
+ORDER BY		dbo.tblPartner.NazivPartnera
+
+---------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[spOrganizacionaJedinicaCombo] @IDVrstaDokumenta VARCHAR(2) = ''  AS
+
+BEGIN
+
+IF @IDVrstaDokumenta IN (SELECT IDVrstaDokumenta FROM dbo.tblVrstaDokumentaOJ GROUP BY IDVrstaDokumenta)
+
+SELECT     tblOrganizacionaJedinica.IDOrganizacionaJedinica,  
+           tblOrganizacionaJedinica.SifraOrganizacionaJedinica + ' ' + tblOrganizacionaJedinica.Naziv 
+           AS [NAZIV MAGACINA], 
+           dbo.tblMesto_ID_NazivMesta (IDMesto) AS MESTO, 
+					 tblOrganizacionaJedinica.SifraOrganizacionaJedinica
+
+FROM       tblOrganizacionaJedinica 
+
+					INNER JOIN dbo.tblVrstaDokumentaOJ
+					ON dbo.tblOrganizacionaJedinica.IDOrganizacionaJedinica = dbo.tblVrstaDokumentaOJ.IDOrganizacionaJedinica
+WHERE			  dbo.tblVrstaDokumentaOJ.IDVrstaDokumenta = @IDVrstaDokumenta
+ORDER BY	 tblOrganizacionaJedinica.SifraSort
+
+
+
+IF @IDVrstaDokumenta NOT IN (SELECT IDVrstaDokumenta FROM dbo.tblVrstaDokumentaOJ GROUP BY IDVrstaDokumenta)
+
+SELECT     tblOrganizacionaJedinica.IDOrganizacionaJedinica,  
+           tblOrganizacionaJedinica.SifraOrganizacionaJedinica + ' ' + tblOrganizacionaJedinica.Naziv 
+           AS [NAZIV MAGACINA], 
+           dbo.tblMesto_ID_NazivMesta (IDMesto) AS MESTO, 
+					 tblOrganizacionaJedinica.SifraOrganizacionaJedinica
+
+FROM       tblOrganizacionaJedinica 
+
+				
+ORDER BY	 tblOrganizacionaJedinica.SifraSort
+
+
+
+END
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[spNacinOporezivanjaComboNabavka] AS
+SELECT     TOP 100 PERCENT IDNacinOporezivanja, Opis, ObracunAkciza, ObracunPorez,ObracunPorezPomocni
+FROM         dbo.tblNacinOporezivanja
+WHERE     (Znak = 1)
+ORDER BY Opis
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[spReferentCombo] AS
+SELECT			IDRAdnik, 
+						ImeRadnika as [IME I PREZIME],
+						SifraRadnika
+
+FROM        dbo.tblSviRadnici
+--where dbo.tblSviRadnici.DavalacPuta <> 0
+ORDER BY		PrezimeRadnika + ' ' + ImeRadnika
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+create PROCEDURE [dbo].[spDokumentNDCombo]
+AS 
+    SELECT  IDDokument ,
+            BrojDokumenta ,
+            Datum ,
+            NazivPartnera
+    FROM    dbo.tblDokument
+            INNER JOIN dbo.tblPartner ON dbo.tblDokument.IDPartner = dbo.tblPartner.IDPartner
+    WHERE   IDVrstaDokumenta = 'ND'
+
+---------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[spPoreskaStopaCombo] AS
+SELECT     TOP 100 PERCENT IDPoreskaStopa, Naziv
+FROM         dbo.tblPoreskaStopa
+ORDER BY IDPoreskaStopa
+
+
+----------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[spArtikalComboUlaz] AS
+
+SELECT			dbo.tblArtikal.IDArtikal, 
+						dbo.tblArtikal.SifraArtikal AS SIFRA, 
+						dbo.tblArtikal.NazivArtikla AS [NAZIV ARTIKLA], 
+            dbo.tblArtikal.IDJedinicaMere AS JM, 
+            dbo.tblArtikal.IDPoreskaStopa, 
+            dbo.tblPoreskaStopa.ProcenatPoreza, 
+            dbo.tblArtikal.Akciza, 
+            dbo.tblArtikal.KoeficijentKolicine,
+            ImaLot,
+            OtkupnaCena,
+            PoljoprivredniProizvod
+
+FROM        dbo.tblArtikal 
+						INNER JOIN dbo.tblPoreskaStopa 
+						ON dbo.tblArtikal.IDPoreskaStopa = dbo.tblPoreskaStopa.IDPoreskaStopa
+
+ORDER BY		tblArtikal.SifraSort
+
+
+
+---------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[spDokumentTroskoviLista]
+	(@IDDokument int)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+	DECLARE @ListaTroskova as table (
+		IDDokumentTroskovi int,
+		IDDokumentTroskoviStavka int,
+		[LISTA ZAVISNIH TROSKOVA] varchar(max),
+		OSNOVICA money,
+		PDV			 money
+	)
+
+  -- Troskovi
+	
+	INSERT	INTO @ListaTroskova
+	SELECT		tblDokumentTroskovi.IDDokumentTroskovi,
+						NULL,
+						NazivPartnera + ' (' + IDVrstaDokumenta + ': ' + BrojDokumenta + ')' as [LISTA ZAVISNIH TROSKOVA],
+						Sum(Iznos) AS OSNOVICA,
+							(SELECT Sum(IznosPDV)
+							 FROM		tblDokumentTroskoviStavkaPDV
+											INNER JOIN tblDokumentTroskoviStavka
+											ON tblDokumentTroskoviStavkaPDV.IDDokumentTroskoviStavka = 
+												 tblDokumentTroskoviStavka.IDDokumentTroskoviStavka
+							 WHERE	tblDokumentTroskoviStavka.IDDokumentTroskovi = 
+											tblDokumentTroskovi.IDDokumentTroskovi) AS PDV
+  
+	from			tblDokumentTroskovi 
+						inner join tblPartner
+						on tblDokumentTroskovi.IDPartner=tblPartner.IDPartner
+						LEFT OUTER JOIN tblDokumentTroskoviStavka
+						on tblDokumentTroskovi.IDDokumentTroskovi= tblDokumentTroskoviStavka.IDDokumentTroskovi			
+  where			tblDokumentTroskovi.IDDokument=@IDDokument
+
+	GROUP BY	tblDokumentTroskovi.IDDokumentTroskovi,
+						NazivPartnera,
+						IDVrstaDokumenta,
+						BrojDokumenta
+
+	-- Stavke troskova
+
+	INSERT		INTO @ListaTroskova
+	SELECT		tblDokumentTroskoviStavka.IDDokumentTroskovi,
+						tblDokumentTroskoviStavka.IDDokumentTroskoviStavka,
+						'  ' + UPPER(tblUlazniRacuniIzvedeni.Opis) AS [LISTA STAVKI TROŠKA],
+						Iznos as OSNOVICA,
+						sum(IznosPDV) as PDV
+
+  from			tblDokumentTroskoviStavka 
+						inner join tblUlazniRacuniIzvedeni
+						on tblDokumentTroskoviStavka.IDUlazniRacuniIzvedeni= 
+													tblUlazniRacuniIzvedeni.IDUlazniRacuniIzvedeni
+						LEFT OUTER JOIN tblDokumentTroskoviStavkaPDV 
+						ON tblDokumentTroskoviStavka.IDDokumentTroskoviStavka= 
+													tblDokumentTroskoviStavkaPDV.IDDokumentTroskoviStavka
+						INNER JOIN tblDokumentTroskovi
+						ON tblDokumentTroskoviStavka.IDDokumentTroskovi= tblDokumentTroskovi.IDDokumentTroskovi
+
+  where			tblDokumentTroskovi.IDDokument=@IDDokument
+
+	GROUP	BY	tblDokumentTroskoviStavka.IDDokumentTroskovi,
+						tblDokumentTroskoviStavka.IDDokumentTroskoviStavka,
+						tblUlazniRacuniIzvedeni.Opis,
+						Iznos
+
+  ----------------------------------------
+
+	SELECT		ListaTroskova.*
+	FROM			@ListaTroskova AS ListaTroskova
+	ORDER BY	IDDokumentTroskovi, IDDokumentTroskoviStavka
+
+END
+
+
+---------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[spUlazniRacuniIzvedeniTroskoviCombo]
+	
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	SELECT IDUlazniRacuniIzvedeni,UPPER(tblUlazniRacuniIzvedeni.Opis) as Naziv,
+         tblUlazniRacuniOsnovni.Opis,NazivSpecifikacije,ObracunPorez,tblUlazniRacuniOsnovni.IDULazniRacuniOsnovni
+  From   tblUlazniRacuniIzvedeni inner join tblUlazniRacuniOsnovni
+         on tblUlazniRacuniIzvedeni.IDULazniRacuniOsnovni=tblUlazniRacuniOsnovni.IDULazniRacuniOsnovni
+         inner join tblSpecifikacija
+         on tblSpecifikacija.IDSpecifikacija=tblUlazniRacuniIzvedeni.IDSpecifikacija
+END
+
+
+---------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[spNacinDeljenjaTroskovaCombo] AS
+SELECT     TOP 100 PERCENT IDNacinDeljenjaTroskova, Naziv, OpisNacina
+FROM         dbo.tblNacinDeljenjaTroskova
+ORDER BY Naziv
+
+
+---------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[spDokumentTroskoviArtikliCOMBO] (@IDDokument int)
+	-- Add the parameters for the stored procedure here
+
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+
+	SELECT		IDStavkaDokumenta,
+						SifraArtikal, 
+						NazivArtikla
+	FROM			tblStavkaDokumenta
+						INNER JOIN tblArtikal
+						ON tblStavkaDokumenta.IDArtikal= tblArtikal.IDArtikal
+	WHERE			tblStavkaDokumenta.IDDokument= @IDDokument
+	ORDER	BY	SifraArtikal
+				
+
+
+
+END
+
+---------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
