@@ -78,6 +78,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// IMPORTANT: register infrastructure (DbContext, repositories, UoW...) BEFORE application services
+builder.Services.AddInfrastructure(builder.Configuration);
+
+// Register application services (they depend on infrastructure)
+builder.Services.AddApplicationServices();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
