@@ -11,7 +11,7 @@ public record PartnerComboDto(
     short ObracunAkciza,
     short ObracunPorez,
     int? IdReferent,
-    string? Sifra
+    string? SifraPartner
 );
 
 // SP 2: spOrganizacionaJedinicaCombo
@@ -71,7 +71,7 @@ public record ArticleComboDto(
 public record DocumentCostsListDto(
     int IdDokumentTroskovi,
     int? IdDokumentTroskoviStavka,
-    string ListaZavisnihTroskova,
+    string ListaTroskova,
     decimal Osnovica,
     decimal Pdv
 );

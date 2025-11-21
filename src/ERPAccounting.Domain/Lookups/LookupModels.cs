@@ -13,7 +13,7 @@ public record PartnerLookup(
     [property: Column("ObracunAkciza")] short ObracunAkciza,
     [property: Column("ObracunPorez")] short ObracunPorez,
     [property: Column("IDReferent")] int? IdReferent,
-    [property: Column("ŠIFRA")] string? Sifra
+    [property: Column("SifraPartner")] string? SifraPartner
 );
 
 // SP 2: spOrganizacionaJedinicaCombo
@@ -73,7 +73,7 @@ public record ArticleLookup(
 public record DocumentCostLookup(
     [property: Column("IDDokumentTroskovi")] int IdDokumentTroskovi,
     [property: Column("IDDokumentTroskoviStavka")] int? IdDokumentTroskoviStavka,
-    [property: Column("LISTA ZAVISNIH TROSKOVA")] string ListaZavisnihTroskova,
+    [property: Column("ListaTroskova")] string ListaTroskova,
     [property: Column("OSNOVICA")] decimal Osnovica,
     [property: Column("PDV")] decimal Pdv
 );

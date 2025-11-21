@@ -90,7 +90,7 @@ public class StoredProcedureService : IStoredProcedureService
         source.ObracunAkciza,
         source.ObracunPorez,
         source.IdReferent,
-        source.Sifra
+        source.SifraPartner
     );
 
     private static OrgUnitComboDto MapToOrgUnitDto(OrgUnitLookup source) => new(
@@ -143,7 +143,7 @@ public class StoredProcedureService : IStoredProcedureService
     private static DocumentCostsListDto MapToDocumentCostDto(DocumentCostLookup source) => new(
         source.IdDokumentTroskovi,
         source.IdDokumentTroskoviStavka,
-        source.ListaZavisnihTroskova,
+        source.ListaTroskova,
         source.Osnovica,
         source.Pdv
     );

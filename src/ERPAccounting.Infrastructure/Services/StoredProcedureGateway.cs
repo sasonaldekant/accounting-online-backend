@@ -130,7 +130,23 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         {
             return await _context.Database
                 .SqlQueryRaw<DocumentCostLookup>(
-                    "EXEC spDokumentTroskoviLista @IDDokument = {0}",
+                    @"DECLARE @result TABLE(
+                            IDDokumentTroskovi INT,
+                            IDDokumentTroskoviStavka INT NULL,
+                            ListaTroskova NVARCHAR(MAX),
+                            Osnovica DECIMAL(19,4),
+                            Pdv DECIMAL(19,4)
+                        );
+
+                        INSERT INTO @result
+                        EXEC spDokumentTroskoviLista @IDDokument = {0};
+
+                        SELECT IDDokumentTroskovi,
+                               IDDokumentTroskoviStavka,
+                               ListaTroskova,
+                               Osnovica,
+                               Pdv
+                        FROM @result;",
                     documentId)
                 .ToListAsync();
         }
