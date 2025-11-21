@@ -48,6 +48,12 @@ builder.Services.AddSwaggerGen(c =>
 // IMPORTANT: register infrastructure (DbContext, repositories, UoW...) BEFORE application services
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
+// Ensure critical repositories are registered even if the infrastructure
+// bootstrap changes. This explicitly wires the document line item repository
+// required by DocumentLineItemService to prevent runtime DI failures.
+builder.Services.AddScoped<ERPAccounting.Domain.Abstractions.Repositories.IDocumentLineItemRepository,
+    ERPAccounting.Infrastructure.Repositories.DocumentLineItemRepository>();
+
 // Register application services (they depend on infrastructure)
 builder.Services.AddApplicationServices();
 
