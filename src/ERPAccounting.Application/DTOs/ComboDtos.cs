@@ -60,8 +60,8 @@ public record ArticleComboDto(
     string? JedinicaMere,
     string? IdPoreskaStopa,
     double ProcenatPoreza,
-    double Akciza,
-    double KoeficijentKolicine,
+    decimal Akciza,
+    decimal KoeficijentKolicine,
     bool ImaLot,
     decimal? OtkupnaCena,
     bool PoljoprivredniProizvod
