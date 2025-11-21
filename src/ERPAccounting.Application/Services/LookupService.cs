@@ -158,7 +158,7 @@ public class LookupService : ILookupService
     private static DocumentCostsListDto MapToDocumentCostDto(DocumentCostLookup source) => new(
         source.IdDokumentTroskovi,
         source.IdDokumentTroskoviStavka,
-        source.ListaZavisnihTroskova,
+        source.ListaTroskova,
         source.Osnovica,
         source.Pdv
     );

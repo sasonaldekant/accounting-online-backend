@@ -73,7 +73,7 @@ public record ArticleLookup(
 public record DocumentCostLookup(
     [property: Column("IDDokumentTroskovi")] int IdDokumentTroskovi,
     [property: Column("IDDokumentTroskoviStavka")] int? IdDokumentTroskoviStavka,
-    [property: Column("LISTA ZAVISNIH TROSKOVA")] string ListaZavisnihTroskova,
+    [property: Column("ListaTroskova")] string ListaTroskova,
     [property: Column("OSNOVICA")] decimal Osnovica,
     [property: Column("PDV")] decimal Pdv
 );
