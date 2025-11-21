@@ -105,7 +105,7 @@ public class LookupService : ILookupService
         source.ObracunAkciza,
         source.ObracunPorez,
         source.IdReferent,
-        source.Sifra
+        source.SifraPartner
     );
 
     private static OrgUnitComboDto MapToOrgUnitDto(OrgUnitLookup source) => new(

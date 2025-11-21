@@ -11,7 +11,7 @@ public record PartnerComboDto(
     short ObracunAkciza,
     short ObracunPorez,
     int? IdReferent,
-    string? Sifra
+    string? SifraPartner
 );
 
 // SP 2: spOrganizacionaJedinicaCombo

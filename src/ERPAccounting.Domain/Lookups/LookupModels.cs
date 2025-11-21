@@ -13,7 +13,7 @@ public record PartnerLookup(
     [property: Column("ObracunAkciza")] short ObracunAkciza,
     [property: Column("ObracunPorez")] short ObracunPorez,
     [property: Column("IDReferent")] int? IdReferent,
-    [property: Column("ŠIFRA")] string? Sifra
+    [property: Column("SifraPartner")] string? SifraPartner
 );
 
 // SP 2: spOrganizacionaJedinicaCombo
