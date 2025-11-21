@@ -1,7 +1,5 @@
-﻿using ERPAccounting.Application.DTOs;
-using ERPAccounting.Application.Services;
-using ERPAccounting.Application.Validators;
-using FluentValidation;
+using ERPAccounting.Application.Extensions;
+using ERPAccounting.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -69,7 +67,7 @@ builder.Services.AddSwaggerGen(options =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
+                    Id = "Bearer",
                 }
             },
             Array.Empty<string>()
@@ -77,48 +75,11 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-<<<<<<< HEAD
-builder.Services.AddScoped<IDocumentLineItemService, DocumentLineItemService>();
-builder.Services.AddScoped<IValidator<CreateLineItemDto>, CreateLineItemValidator>();
-builder.Services.AddScoped<IValidator<PatchLineItemDto>, PatchLineItemValidator>();
-=======
 // IMPORTANT: register infrastructure (DbContext, repositories, UoW...) BEFORE application services
-builder.Services.AddInfrastructureServices(builder.Configuration);
-
-// Ensure critical repositories are registered even if the infrastructure
-// bootstrap changes. This explicitly wires the document line item repository
-// required by DocumentLineItemService to prevent runtime DI failures.
-builder.Services.AddScoped<ERPAccounting.Domain.Abstractions.Repositories.IDocumentLineItemRepository,
-    ERPAccounting.Infrastructure.Repositories.DocumentLineItemRepository>();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Register application services (they depend on infrastructure)
 builder.Services.AddApplicationServices();
-
-// JWT Authentication configuration
-builder.Services
-    .AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        var jwtSection = builder.Configuration.GetSection("Jwt");
-        var signingKey = jwtSection.GetValue<string>("SigningKey")
-            ?? throw new InvalidOperationException("JWT SigningKey configuration is missing.");
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection.GetValue<string>("Issuer"),
-            ValidAudience = jwtSection.GetValue<string>("Audience"),
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey))
-        };
-    });
->>>>>>> c8d0022cffbd8d18198a2e9ff3677a980ad96026
 
 var app = builder.Build();
 
