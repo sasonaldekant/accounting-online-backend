@@ -119,6 +119,58 @@ public class DocumentServiceTests
     }
 
     [Fact]
+    public async Task UpdateDocumentAsync_RowVersionMatches_UpdatesEntity()
+    {
+        var repositoryMock = new Mock<IDocumentRepository>();
+        var unitOfWorkMock = new Mock<IUnitOfWork>();
+        var rowVersion = new byte[] { 1, 2, 3 };
+        var entity = new Document
+        {
+            IDDokument = 1,
+            BrojDokumenta = "Old",
+            Datum = new DateTime(2024, 1, 1),
+            IDPartner = 10,
+            IDOrganizacionaJedinica = 20,
+            ZavisniTroskoviBezPDVa = 5,
+            ZavisniTroskoviPDV = 1,
+            Napomena = "old",
+            ObradjenDokument = false,
+            ProknjizenDokument = false,
+            DokumentTimeStamp = rowVersion
+        };
+        repositoryMock.Setup(r => r.GetByIdAsync(1, true, default)).ReturnsAsync(entity);
+
+        var service = CreateService(repositoryMock, unitOfWorkMock);
+
+        var result = await service.UpdateDocumentAsync(1, rowVersion, UpdateDto);
+
+        repositoryMock.Verify(r => r.Update(It.Is<Document>(d =>
+            d.IDDokument == 1 &&
+            d.BrojDokumenta == UpdateDto.DocumentNumber &&
+            d.Datum == UpdateDto.DocumentDate &&
+            d.IDPartner == UpdateDto.PartnerId &&
+            d.IDOrganizacionaJedinica == UpdateDto.OrganizationalUnitId &&
+            d.IDReferentniDokument == UpdateDto.ReferentDocumentId &&
+            d.ZavisniTroskoviBezPDVa == UpdateDto.DependentCostsNet &&
+            d.ZavisniTroskoviPDV == UpdateDto.DependentCostsVat &&
+            d.Napomena == UpdateDto.Note &&
+            d.ObradjenDokument == UpdateDto.Processed &&
+            d.ProknjizenDokument == UpdateDto.Posted)), Times.Once);
+        unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+
+        Assert.Equal(UpdateDto.DocumentNumber, result.DocumentNumber);
+        Assert.Equal(UpdateDto.DocumentDate, result.DocumentDate);
+        Assert.Equal(UpdateDto.PartnerId, result.PartnerId);
+        Assert.Equal(UpdateDto.OrganizationalUnitId, result.OrganizationalUnitId);
+        Assert.Equal(UpdateDto.ReferentDocumentId, result.ReferentDocumentId);
+        Assert.Equal(UpdateDto.DependentCostsNet, result.DependentCostsNet);
+        Assert.Equal(UpdateDto.DependentCostsVat, result.DependentCostsVat);
+        Assert.Equal(UpdateDto.Note, result.Note);
+        Assert.Equal(UpdateDto.Processed, result.Processed);
+        Assert.Equal(UpdateDto.Posted, result.Posted);
+    }
+
+    [Fact]
     public async Task DeleteDocumentAsync_NotFound_ReturnsFalse()
     {
         var repositoryMock = new Mock<IDocumentRepository>();
@@ -130,6 +182,24 @@ public class DocumentServiceTests
         var result = await service.DeleteDocumentAsync(1);
 
         Assert.False(result);
+    }
+
+    [Fact]
+    public async Task DeleteDocumentAsync_ExistingEntity_MarksAsDeleted()
+    {
+        var repositoryMock = new Mock<IDocumentRepository>();
+        var unitOfWorkMock = new Mock<IUnitOfWork>();
+        var entity = new Document { IDDokument = 1, IsDeleted = false };
+        repositoryMock.Setup(r => r.GetByIdAsync(1, true, default)).ReturnsAsync(entity);
+
+        var service = CreateService(repositoryMock, unitOfWorkMock);
+
+        var result = await service.DeleteDocumentAsync(1);
+
+        Assert.True(entity.IsDeleted);
+        Assert.True(result);
+        repositoryMock.Verify(r => r.Update(It.Is<Document>(d => d == entity && d.IsDeleted)), Times.Once);
+        unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 
     private static DocumentService CreateService(
