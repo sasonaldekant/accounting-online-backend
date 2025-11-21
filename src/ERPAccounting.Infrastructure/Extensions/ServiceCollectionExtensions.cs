@@ -21,6 +21,13 @@ public static class ServiceCollectionExtensions
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
+        RegisterDataAccess(services);
+
+        return services;
+    }
+
+    private static void RegisterDataAccess(IServiceCollection services)
+    {
         // Repositories, gateways, and unit of work required by application services
         RegisterPersistenceServices(services);
 
