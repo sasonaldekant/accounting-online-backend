@@ -22,13 +22,18 @@ public static class ServiceCollectionExtensions
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
         // Repositories, gateways, and unit of work required by application services
+        RegisterPersistenceServices(services);
+
+        return services;
+    }
+
+    private static void RegisterPersistenceServices(IServiceCollection services)
+    {
         services.AddScoped<IStoredProcedureGateway, StoredProcedureGateway>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentLineItemRepository, DocumentLineItemRepository>();
         services.AddScoped<IDocumentCostRepository, DocumentCostRepository>();
         services.AddScoped<IDocumentCostItemRepository, DocumentCostItemRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-        return services;
     }
 }
