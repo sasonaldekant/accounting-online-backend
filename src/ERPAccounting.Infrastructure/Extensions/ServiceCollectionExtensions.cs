@@ -21,14 +21,13 @@ public static class ServiceCollectionExtensions
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
-        // Repositories & Gateways
+        // Repositories, gateways, and unit of work required by application services
         services.AddScoped<IStoredProcedureGateway, StoredProcedureGateway>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentLineItemRepository, DocumentLineItemRepository>();
         services.AddScoped<IDocumentCostRepository, DocumentCostRepository>();
         services.AddScoped<IDocumentCostItemRepository, DocumentCostItemRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-
 
         return services;
     }
