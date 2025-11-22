@@ -51,7 +51,27 @@ public class DocumentLineItemsControllerTests
     {
         var rowVersion = new byte[] { 1, 2, 3, 4 };
         var etag = Convert.ToBase64String(rowVersion);
-        var updatedItem = new DocumentLineItemDto { Id = 10, ETag = etag };
+        var timestamp = DateTime.UtcNow;
+        var updatedItem = new DocumentLineItemDto(
+            10,
+            1,
+            1,
+            1m,
+            2m,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            true,
+            null,
+            etag,
+            timestamp,
+            timestamp,
+            null,
+            null);
         var serviceMock = new Mock<IDocumentLineItemService>(MockBehavior.Strict);
         serviceMock
             .Setup(s => s.UpdateAsync(1, 10, rowVersion, It.IsAny<PatchLineItemDto>()))
