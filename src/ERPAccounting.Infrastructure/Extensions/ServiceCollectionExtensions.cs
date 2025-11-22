@@ -19,7 +19,9 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),
-                sqlOptions => sqlOptions.EnableRetryOnFailure()));
+                sqlOptions => sqlOptions
+                    .CommandTimeout(120)
+                    .EnableRetryOnFailure()));
 
         RegisterRepositories(services);
 
