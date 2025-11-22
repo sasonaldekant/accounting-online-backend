@@ -92,7 +92,7 @@ public record CostTypeLookup(
 public record CostDistributionMethodLookup
 {
     [Column("IDNacinDeljenjaTroskova")]
-    public short IdNacinDeljenjaTroskova { get; set; }
+    public int IdNacinDeljenjaTroskova { get; set; }
 
     [Column("Naziv")]
     public string Naziv { get; set; } = string.Empty;
