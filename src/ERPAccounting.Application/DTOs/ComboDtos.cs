@@ -77,6 +77,7 @@ public record DocumentCostsListDto(
 );
 
 // SP 9: spUlazniRacuniIzvedeniTroskoviCombo
+// ObracunPorez is an int to mirror the stored procedure output and prevent InvalidCastException.
 public record CostTypeComboDto(
     int IdUlazniRacuniIzvedeni,
     string Naziv,

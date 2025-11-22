@@ -79,6 +79,7 @@ public record DocumentCostLookup(
 );
 
 // SP 9: spUlazniRacuniIzvedeniTroskoviCombo
+// ObracunPorez is an int to match the stored procedure output and avoid InvalidCastException.
 public record CostTypeLookup(
     [property: Column("IDUlazniRacuniIzvedeni")] int IdUlazniRacuniIzvedeni,
     [property: Column("Naziv")] string Naziv,
