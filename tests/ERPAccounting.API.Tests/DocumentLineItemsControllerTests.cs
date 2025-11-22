@@ -52,26 +52,7 @@ public class DocumentLineItemsControllerTests
         var rowVersion = new byte[] { 1, 2, 3, 4 };
         var etag = Convert.ToBase64String(rowVersion);
         var timestamp = DateTime.UtcNow;
-        var updatedItem = new DocumentLineItemDto(
-            10,
-            1,
-            1,
-            1m,
-            2m,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            false,
-            true,
-            null,
-            etag,
-            timestamp,
-            timestamp,
-            null,
-            null);
+        var updatedItem = CreateDocumentLineItemDto(etag, timestamp);
         var serviceMock = new Mock<IDocumentLineItemService>(MockBehavior.Strict);
         serviceMock
             .Setup(s => s.UpdateAsync(1, 10, rowVersion, It.IsAny<PatchLineItemDto>()))
@@ -135,5 +116,29 @@ public class DocumentLineItemsControllerTests
 
         controller.ControllerContext.HttpContext.TraceIdentifier = Guid.NewGuid().ToString();
         return controller;
+    }
+
+    private static DocumentLineItemDto CreateDocumentLineItemDto(string etag, DateTime timestamp)
+    {
+        return new DocumentLineItemDto(
+            10,
+            1,
+            1,
+            1m,
+            2m,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            true,
+            null,
+            etag,
+            timestamp,
+            timestamp,
+            null,
+            null);
     }
 }
