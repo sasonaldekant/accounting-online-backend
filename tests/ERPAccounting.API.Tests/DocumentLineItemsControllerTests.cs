@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Net;
-using System.Linq;
 using ERPAccounting.API.Controllers;
 using ERPAccounting.Common.Exceptions;
 using ERPAccounting.Application.DTOs;
@@ -76,6 +75,7 @@ public class DocumentLineItemsControllerTests
             null);
         var serviceMock = new Mock<IDocumentLineItemService>(MockBehavior.Strict);
         serviceMock
+            // Keep matcher inline so Moq captures it in the expression tree
             .Setup(s => s.UpdateAsync(1, 10, It.Is<byte[]>(b => b.SequenceEqual(rowVersion)), It.IsAny<PatchLineItemDto>()))
             .ReturnsAsync(updatedItem);
 
@@ -98,6 +98,7 @@ public class DocumentLineItemsControllerTests
         var etag = Convert.ToBase64String(rowVersion);
         var serviceMock = new Mock<IDocumentLineItemService>(MockBehavior.Strict);
         serviceMock
+            // Keep matcher inline so Moq captures it in the expression tree
             .Setup(s => s.UpdateAsync(1, 10, It.Is<byte[]>(b => b.SequenceEqual(rowVersion)), It.IsAny<PatchLineItemDto>()))
             .ThrowsAsync(new ConflictException("Row version mismatch"));
 
