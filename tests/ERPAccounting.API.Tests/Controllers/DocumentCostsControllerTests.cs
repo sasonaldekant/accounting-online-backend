@@ -52,7 +52,7 @@ public class DocumentCostsControllerTests
         var controller = CreateController(serviceMock.Object);
         controller.Request.Headers["If-Match"] = $"\"{encodedEtag}\"";
 
-        var result = await controller.UpdateCost(1, 5, new UpdateDocumentCostDto(1, 2, DateTime.UtcNow, 10, 20, "desc"));
+        var result = await controller.UpdateCost(1, 5, new UpdateDocumentCostDto(1, "ZT", 10, 20, DateTime.UtcNow, "desc"));
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(expectedDto, okResult.Value);
@@ -74,7 +74,7 @@ public class DocumentCostsControllerTests
         var controller = CreateController(serviceMock.Object);
         controller.Request.Headers["If-Match"] = $"\"{encodedEtag}\"";
 
-        var result = await controller.UpdateCostItem(1, 2, 3, new PatchDocumentCostItemDto(1, 2, 3, 4, 5));
+        var result = await controller.UpdateCostItem(1, 2, 3, new PatchDocumentCostItemDto(1, 2, 3, 4, "note"));
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(expectedDto, okResult.Value);
@@ -95,7 +95,7 @@ public class DocumentCostsControllerTests
         var controller = CreateController(serviceMock.Object);
         controller.Request.Headers["If-Match"] = $"\"{encodedEtag}\"";
 
-        var result = await controller.UpdateCostItem(1, 2, 3, new PatchDocumentCostItemDto(1, 2, 3, 4, 5));
+        var result = await controller.UpdateCostItem(1, 2, 3, new PatchDocumentCostItemDto(1, 2, 3, 4, "note"));
 
         Assert.IsType<ConflictObjectResult>(result.Result);
     }
