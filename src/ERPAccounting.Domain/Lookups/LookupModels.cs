@@ -92,6 +92,7 @@ public record CostTypeLookup(
 public record CostDistributionMethodLookup
 {
     [Column("IDNacinDeljenjaTroskova")]
+    // Stored procedure spNacinDeljenjaTroskovaCombo returns INT, keep property as int to match materialization
     public int IdNacinDeljenjaTroskova { get; set; }
 
     [Column("Naziv")]
