@@ -91,7 +91,7 @@ public record CostTypeLookup(
 // SP 10: spNacinDeljenjaTroskovaCombo
 public record CostDistributionMethodLookup
 {
-    [Column("IDNacinDeljenjaTroskova")]
+    [Column("IDNacinDeljenjaTroskova", TypeName = "int")]
     public int IdNacinDeljenjaTroskova { get; set; }
 
     [Column("Naziv")]
