@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ERPAccounting.Common.Interfaces;
 using ERPAccounting.Domain.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ERPAccounting.Infrastructure.Middleware
 {
@@ -13,13 +14,21 @@ namespace ERPAccounting.Infrastructure.Middleware
     /// Middleware za automatsko logovanje svih API poziva.
     /// Hvataj request/response i čuva u tblAPIAuditLog tabelu.
     /// </summary>
-    public class ApiAuditMiddleware(RequestDelegate next)
+    public class ApiAuditMiddleware
     {
-        private readonly RequestDelegate _next = next;
+        private readonly RequestDelegate _next;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+
+        public ApiAuditMiddleware(
+            RequestDelegate next,
+            IServiceScopeFactory serviceScopeFactory)
+        {
+            _next = next;
+            _serviceScopeFactory = serviceScopeFactory;
+        }
 
         public async Task InvokeAsync(
             HttpContext context,
-            IAuditLogService auditLogService,
             ICurrentUserService currentUserService)
         {
             // Kreiraj audit log objekat
@@ -106,9 +115,12 @@ namespace ERPAccounting.Infrastructure.Middleware
                 // Fire and forget pattern - ne čekamo da se logovanje završi
                 _ = Task.Run(async () =>
                 {
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var scopedAuditLogService = scope.ServiceProvider.GetRequiredService<IAuditLogService>();
+
                     try
                     {
-                        await auditLogService.LogAsync(auditLog);
+                        await scopedAuditLogService.LogAsync(auditLog);
                     }
                     catch
                     {
