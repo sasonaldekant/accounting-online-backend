@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ERPAccounting.Common.Interfaces;
 using ERPAccounting.Domain.Entities;
@@ -54,10 +55,11 @@ namespace ERPAccounting.Infrastructure.Middleware
             // Measure response time
             var stopwatch = Stopwatch.StartNew();
 
-            // Capture response body
+            // Capture response body using a non-disposable wrapper so downstream code cannot close it
             var originalBodyStream = context.Response.Body;
             await using var responseBody = new MemoryStream();
-            context.Response.Body = responseBody;
+            await using var safeResponseBody = new NonDisposableStream(responseBody);
+            context.Response.Body = safeResponseBody;
 
             try
             {
@@ -72,19 +74,16 @@ namespace ERPAccounting.Infrastructure.Middleware
 
                 // Capture response body (opciono - može biti veliko)
                 // Za production, možda ne želiš da loguješ response body
-                responseBody.Seek(0, SeekOrigin.Begin);
-                using (var reader = new StreamReader(responseBody))
+                if (TrySeekToBeginning(responseBody) && auditLog.IsSuccess == false)
                 {
-                    // Opciono: Loguj samo za error responses ili za debugging
-                    if (auditLog.IsSuccess == false)
-                    {
-                        auditLog.ResponseBody = await reader.ReadToEndAsync();
-                    }
+                    auditLog.ResponseBody = await ReadResponseBodyAsync(responseBody);
                 }
 
                 // Copy response back to original stream
-                responseBody.Seek(0, SeekOrigin.Begin);
-                await responseBody.CopyToAsync(originalBodyStream);
+                if (TrySeekToBeginning(responseBody))
+                {
+                    await CopyResponseAsync(responseBody, originalBodyStream);
+                }
             }
             catch (Exception ex)
             {
@@ -114,6 +113,90 @@ namespace ERPAccounting.Infrastructure.Middleware
                     // Ignore errors - audit failure ne sme da crash-uje aplikaciju
                     // AuditLogService već loguje greške u svoj logger
                 }
+            }
+        }
+
+        private static bool TrySeekToBeginning(Stream stream)
+        {
+            try
+            {
+                if (stream.CanSeek)
+                {
+                    stream.Seek(0, SeekOrigin.Begin);
+                    return true;
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Stream je zatvoren od strane downstream middleware-a
+            }
+
+            return false;
+        }
+
+        private static async Task<string?> ReadResponseBodyAsync(Stream stream)
+        {
+            try
+            {
+                if (!stream.CanRead)
+                {
+                    return null;
+                }
+
+                using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
+                return await reader.ReadToEndAsync();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Stream je zatvoren, preskoči čitanje
+                return null;
+            }
+        }
+
+        private static async Task CopyResponseAsync(Stream source, Stream destination)
+        {
+            try
+            {
+                if (source.CanRead)
+                {
+                    await source.CopyToAsync(destination);
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Stream je zatvoren, preskoči kopiranje
+            }
+        }
+
+        private sealed class NonDisposableStream(Stream inner) : Stream
+        {
+            public override bool CanRead => inner.CanRead;
+            public override bool CanSeek => inner.CanSeek;
+            public override bool CanWrite => inner.CanWrite;
+            public override long Length => inner.Length;
+            public override long Position { get => inner.Position; set => inner.Position = value; }
+
+            public override void Flush() => inner.Flush();
+            public override Task FlushAsync(CancellationToken cancellationToken) => inner.FlushAsync(cancellationToken);
+            public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
+            public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => inner.ReadAsync(buffer, cancellationToken);
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) => inner.ReadAsync(buffer, offset, count, cancellationToken);
+            public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
+            public override void SetLength(long value) => inner.SetLength(value);
+            public override void Write(byte[] buffer, int offset, int count) => inner.Write(buffer, offset, count);
+            public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) => inner.WriteAsync(buffer, cancellationToken);
+            public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) => inner.WriteAsync(buffer, offset, count, cancellationToken);
+            public override void WriteByte(byte value) => inner.WriteByte(value);
+
+            protected override void Dispose(bool disposing)
+            {
+                // Do not dispose the inner stream to avoid breaking middleware that expects it to stay open
+            }
+
+            public override async ValueTask DisposeAsync()
+            {
+                // Mirror Dispose behavior but keep inner stream open
+                await Task.CompletedTask;
             }
         }
     }
