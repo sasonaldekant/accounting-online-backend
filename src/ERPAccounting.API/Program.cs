@@ -1,5 +1,6 @@
-using ERPAccounting.Application.Extensions;
 using ERPAccounting.Application.Common.Interfaces;
+using ERPAccounting.Application.Extensions;
+using ERPAccounting.Infrastructure.Middleware;
 using ERPAccounting.Infrastructure.Extensions;
 using ERPAccounting.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -50,6 +51,9 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 // Register application services (they depend on infrastructure)
 builder.Services.AddApplicationServices();
 
+// Audit log service
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+
 // Konfiguriši Swagger sa Bearer autentifikacijom
 builder.Services.AddSwaggerGen(options =>
 {
@@ -94,6 +98,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ApiAuditMiddleware>();
 
 app.UseHttpsRedirection();
 
