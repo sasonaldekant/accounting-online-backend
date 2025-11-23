@@ -5,4 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ERPAccounting.Domain\ERPAccounting.Domain.csproj" />
+  </ItemGroup>
 </Project>
