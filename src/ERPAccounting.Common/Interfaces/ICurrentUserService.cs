@@ -1,4 +1,4 @@
-namespace ERPAccounting.Application.Common.Interfaces
+namespace ERPAccounting.Common.Interfaces
 {
     /// <summary>
     /// Servis za dobijanje informacija o trenutnom korisniku.

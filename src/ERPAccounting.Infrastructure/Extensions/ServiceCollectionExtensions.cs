@@ -1,4 +1,4 @@
-using ERPAccounting.Application.Common.Interfaces;
+using ERPAccounting.Common.Interfaces;
 using ERPAccounting.Domain.Abstractions.Gateways;
 using ERPAccounting.Domain.Abstractions.Repositories;
 using ERPAccounting.Infrastructure.Data;

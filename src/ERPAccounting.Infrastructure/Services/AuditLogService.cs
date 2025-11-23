@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ERPAccounting.Application.Common.Interfaces;
+using ERPAccounting.Common.Interfaces;
 using ERPAccounting.Domain.Entities;
 using ERPAccounting.Infrastructure.Data;
 using Microsoft.Extensions.Logging;
