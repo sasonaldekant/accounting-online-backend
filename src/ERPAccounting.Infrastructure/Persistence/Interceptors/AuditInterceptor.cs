@@ -76,7 +76,7 @@ namespace ERPAccounting.Infrastructure.Persistence.Interceptors
         /// <summary>
         /// Popunjava audit polja za novi entitet.
         /// </summary>
-        private void HandleAddedEntity(BaseEntity entity, DateTime timestamp, string username)
+        private static void HandleAddedEntity(BaseEntity entity, DateTime timestamp, string username)
         {
             entity.CreatedAt = timestamp;
             entity.CreatedBy = username;
@@ -89,7 +89,7 @@ namespace ERPAccounting.Infrastructure.Persistence.Interceptors
         /// Ažurira audit polja za izmenjeni entitet.
         /// VAŽNO: NE menjamo CreatedAt i CreatedBy - oni se postavljaju samo pri kreiranju.
         /// </summary>
-        private void HandleModifiedEntity(BaseEntity entity, DateTime timestamp, string username)
+        private static void HandleModifiedEntity(BaseEntity entity, DateTime timestamp, string username)
         {
             entity.UpdatedAt = timestamp;
             entity.UpdatedBy = username;
@@ -100,7 +100,7 @@ namespace ERPAccounting.Infrastructure.Persistence.Interceptors
         /// Umesto fizičkog brisanja, menja State u Modified i setuje IsDeleted = true.
         /// EF Core će generisati UPDATE umesto DELETE statement.
         /// </summary>
-        private void HandleDeletedEntity(EntityEntry<BaseEntity> entry, DateTime timestamp, string username)
+        private static void HandleDeletedEntity(EntityEntry<BaseEntity> entry, DateTime timestamp, string username)
         {
             // KLJUČNO: Menjamo state iz Deleted u Modified
             entry.State = EntityState.Modified;
