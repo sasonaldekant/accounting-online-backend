@@ -110,20 +110,16 @@ namespace ERPAccounting.Infrastructure.Middleware
                 }
                 finally
                 {
-                    // VAŽNO: Loguj asinkrono da ne blokiraš request
-                    // Fire and forget pattern - ne čekamo da se logovanje završi
-                    _ = Task.Run(async () =>
+                    try
                     {
-                        try
-                        {
-                            await auditLogService.LogAsync(auditLog);
-                        }
-                        catch
-                        {
-                            // Ignore errors - audit failure ne sme da crash-uje aplikaciju
-                            // AuditLogService već loguje greške u svoj logger
-                        }
-                    });
+                        // Loguj pre disposala request scope-a da se izbegne ObjectDisposedException
+                        await auditLogService.LogAsync(auditLog);
+                    }
+                    catch
+                    {
+                        // Ignore errors - audit failure ne sme da crash-uje aplikaciju
+                        // AuditLogService već loguje greške u svoj logger
+                    }
                 }
             }
         }
