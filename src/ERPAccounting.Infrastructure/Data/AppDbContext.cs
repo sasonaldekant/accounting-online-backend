@@ -127,6 +127,22 @@ namespace ERPAccounting.Infrastructure.Data
                 .HasColumnType("money")
                 .HasPrecision(19, 4);
 
+            lineItemEntity.Property(e => e.VrednostObracunPDV)
+                .HasColumnType("decimal(19, 4)")
+                .HasPrecision(19, 4);
+
+            lineItemEntity.Property(e => e.VrednostObracunAkciza)
+                .HasColumnType("decimal(19, 4)")
+                .HasPrecision(19, 4);
+
+            lineItemEntity.Property(e => e.ProizvodnjaKolicina)
+                .HasColumnType("decimal(19, 4)")
+                .HasPrecision(19, 4);
+
+            lineItemEntity.Property(e => e.ProizvodnjaKoeficijentKolicine)
+                .HasColumnType("decimal(19, 4)")
+                .HasPrecision(19, 4);
+
             // Foreign keys
             lineItemEntity.HasOne(e => e.Document)
                 .WithMany(e => e.LineItems)
@@ -180,6 +196,14 @@ namespace ERPAccounting.Infrastructure.Data
                 .WithMany(e => e.CostLineItems)
                 .HasForeignKey(e => e.IDDokumentTroskovi)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // ═══════════════════════════════════════════════════════════════
+            // DEPENDENT COST LINE ITEM KONFIGURACIJA
+            var dependentCostLineItemEntity = modelBuilder.Entity<DependentCostLineItem>();
+
+            dependentCostLineItemEntity.Property(e => e.Amount)
+                .HasColumnType("decimal(19, 4)")
+                .HasPrecision(19, 4);
 
             // ═══════════════════════════════════════════════════════════════
             // API AUDIT LOG KONFIGURACIJA
