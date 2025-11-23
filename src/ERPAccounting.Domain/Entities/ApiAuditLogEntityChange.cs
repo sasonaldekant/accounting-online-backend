@@ -10,12 +10,12 @@ namespace ERPAccounting.Domain.Entities
         public int IDAuditLog { get; set; }
 
         // Change Details
-        public string PropertyName { get; set; }
-        public string OldValue { get; set; }
-        public string NewValue { get; set; }
-        public string DataType { get; set; }
+        public string? PropertyName { get; set; }
+        public string? OldValue { get; set; }
+        public string? NewValue { get; set; }
+        public string? DataType { get; set; }
 
         // Navigation
-        public ApiAuditLog AuditLog { get; set; }
+        public ApiAuditLog? AuditLog { get; set; }
     }
 }

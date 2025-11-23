@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ERPAccounting.Application.Common.Interfaces;
+using ERPAccounting.Common.Interfaces;
 using ERPAccounting.Domain.Entities;
 using ERPAccounting.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -116,14 +116,14 @@ namespace ERPAccounting.Infrastructure.Services
         /// Helper metoda za serijalizaciju vrednosti u string format.
         /// Rukuje null, complex types, i edge cases.
         /// </summary>
-        private string SerializeValue(object value)
+        private static string? SerializeValue(object value)
         {
             if (value == null)
                 return null;
 
             // Za jednostavne tipove - direktna konverzija
             if (value is string || value.GetType().IsPrimitive || value is DateTime || value is decimal)
-                return value.ToString();
+                return value.ToString() ?? string.Empty;
 
             // Za complex tipove - JSON serijalizacija
             try
@@ -132,7 +132,7 @@ namespace ERPAccounting.Infrastructure.Services
             }
             catch
             {
-                return value.ToString();
+                return value.ToString() ?? string.Empty;
             }
         }
     }

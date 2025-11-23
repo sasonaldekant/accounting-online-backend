@@ -13,38 +13,38 @@ namespace ERPAccounting.Domain.Entities
 
         // Request Info
         public DateTime Timestamp { get; set; }
-        public string HttpMethod { get; set; }
-        public string Endpoint { get; set; }
-        public string RequestPath { get; set; }
-        public string QueryString { get; set; }
+        public string? HttpMethod { get; set; }
+        public string? Endpoint { get; set; }
+        public string? RequestPath { get; set; }
+        public string? QueryString { get; set; }
 
         // User Info
         public int? UserId { get; set; }
-        public string Username { get; set; }
-        public string IPAddress { get; set; }
-        public string UserAgent { get; set; }
+        public string? Username { get; set; }
+        public string? IPAddress { get; set; }
+        public string? UserAgent { get; set; }
 
         // Request/Response
-        public string RequestBody { get; set; }
+        public string? RequestBody { get; set; }
         public int ResponseStatusCode { get; set; }
-        public string ResponseBody { get; set; }
+        public string? ResponseBody { get; set; }
         public int? ResponseTimeMs { get; set; }
 
         // Entity Changes
-        public string EntityType { get; set; }
-        public string EntityId { get; set; }
-        public string OperationType { get; set; }
+        public string? EntityType { get; set; }
+        public string? EntityId { get; set; }
+        public string? OperationType { get; set; }
 
         // Error Info
-        public bool IsSuccess { get; set; }
-        public string ErrorMessage { get; set; }
-        public string ExceptionDetails { get; set; }
+        public bool? IsSuccess { get; set; }
+        public string? ErrorMessage { get; set; }
+        public string? ExceptionDetails { get; set; }
 
         // Metadata
         public Guid? CorrelationId { get; set; }
-        public string SessionId { get; set; }
+        public string? SessionId { get; set; }
 
         // Navigation
-        public ICollection<ApiAuditLogEntityChange> EntityChanges { get; set; }
+        public ICollection<ApiAuditLogEntityChange>? EntityChanges { get; set; }
     }
 }
