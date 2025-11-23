@@ -56,7 +56,7 @@ namespace ERPAccounting.Infrastructure.Middleware
 
             // Capture response body
             var originalBodyStream = context.Response.Body;
-            using var responseBody = new MemoryStream();
+            await using var responseBody = new MemoryStream();
             context.Response.Body = responseBody;
 
             try
@@ -102,20 +102,18 @@ namespace ERPAccounting.Infrastructure.Middleware
             }
             finally
             {
-                // VAŽNO: Loguj asinkrono da ne blokiraš request
-                // Fire and forget pattern - ne čekamo da se logovanje završi
-                _ = Task.Run(async () =>
+                // Vrati originalni stream kako bi naredni middleware mogao da piše u response
+                context.Response.Body = originalBodyStream;
+
+                try
                 {
-                    try
-                    {
-                        await auditLogService.LogAsync(auditLog);
-                    }
-                    catch
-                    {
-                        // Ignore errors - audit failure ne sme da crash-uje aplikaciju
-                        // AuditLogService već loguje greške u svoj logger
-                    }
-                });
+                    await auditLogService.LogAsync(auditLog);
+                }
+                catch
+                {
+                    // Ignore errors - audit failure ne sme da crash-uje aplikaciju
+                    // AuditLogService već loguje greške u svoj logger
+                }
             }
         }
     }
