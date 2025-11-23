@@ -61,7 +61,7 @@ public record ArticleLookup(
     [property: Column("NAZIV ARTIKLA")] string NazivArtikla,
     [property: Column("JM")] string? JedinicaMere,
     [property: Column("IDPoreskaStopa")] string? IdPoreskaStopa,
-    [property: Column("ProcenatPoreza")] decimal ProcenatPoreza,
+    [property: Column("ProcenatPoreza")] double ProcenatPoreza,
     [property: Column("Akciza")] decimal Akciza,
     [property: Column("KoeficijentKolicine")] decimal KoeficijentKolicine,
     [property: Column("ImaLot")] bool ImaLot,
