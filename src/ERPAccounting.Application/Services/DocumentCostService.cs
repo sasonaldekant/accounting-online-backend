@@ -11,49 +11,36 @@ namespace ERPAccounting.Application.Services;
 /// <summary>
 /// Implementacija servisa za upravljanje zavisnim troškovima i njihovim stavkama.
 /// </summary>
-public class DocumentCostService : IDocumentCostService
+public class DocumentCostService(
+    IDocumentCostRepository costRepository,
+    IDocumentCostItemRepository costItemRepository,
+    IDocumentRepository documentRepository,
+    IUnitOfWork unitOfWork,
+    IValidator<CreateDocumentCostDto> createCostValidator,
+    IValidator<UpdateDocumentCostDto> updateCostValidator,
+    IValidator<CreateDocumentCostItemDto> createCostItemValidator,
+    IValidator<PatchDocumentCostItemDto> patchCostItemValidator,
+    ILogger<DocumentCostService> logger) : IDocumentCostService
 {
-    private readonly IDocumentCostRepository _costRepository;
-    private readonly IDocumentCostItemRepository _costItemRepository;
-    private readonly IDocumentRepository _documentRepository;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IValidator<CreateDocumentCostDto> _createCostValidator;
-    private readonly IValidator<UpdateDocumentCostDto> _updateCostValidator;
-    private readonly IValidator<CreateDocumentCostItemDto> _createCostItemValidator;
-    private readonly IValidator<PatchDocumentCostItemDto> _patchCostItemValidator;
-    private readonly ILogger<DocumentCostService> _logger;
-
-    public DocumentCostService(
-        IDocumentCostRepository costRepository,
-        IDocumentCostItemRepository costItemRepository,
-        IDocumentRepository documentRepository,
-        IUnitOfWork unitOfWork,
-        IValidator<CreateDocumentCostDto> createCostValidator,
-        IValidator<UpdateDocumentCostDto> updateCostValidator,
-        IValidator<CreateDocumentCostItemDto> createCostItemValidator,
-        IValidator<PatchDocumentCostItemDto> patchCostItemValidator,
-        ILogger<DocumentCostService> logger)
-    {
-        _costRepository = costRepository;
-        _costItemRepository = costItemRepository;
-        _document_repository = documentRepository;
-        _unitOfWork = unitOfWork;
-        _createCostValidator = createCostValidator;
-        _updateCostValidator = updateCostValidator;
-        _createCostItemValidator = createCostItemValidator;
-        _patchCostItem_validator = patchCostItemValidator;
-        _logger = logger;
-    }
+    private readonly IDocumentCostRepository _costRepository = costRepository;
+    private readonly IDocumentCostItemRepository _costItemRepository = costItemRepository;
+    private readonly IDocumentRepository _documentRepository = documentRepository;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IValidator<CreateDocumentCostDto> _createCostValidator = createCostValidator;
+    private readonly IValidator<UpdateDocumentCostDto> _updateCostValidator = updateCostValidator;
+    private readonly IValidator<CreateDocumentCostItemDto> _createCostItemValidator = createCostItemValidator;
+    private readonly IValidator<PatchDocumentCostItemDto> _patchCostItemValidator = patchCostItemValidator;
+    private readonly ILogger<DocumentCostService> _logger = logger;
 
     public async Task<IReadOnlyList<DocumentCostDto>> GetCostsAsync(int documentId)
     {
         var costs = await _costRepository.GetByDocumentAsync(documentId);
-        return costs.Select(MapToDto).ToList();
+        return [.. costs.Select(MapToDto)];
     }
 
     public async Task<DocumentCostDto?> GetCostByIdAsync(int documentId, int costId)
     {
-        var entity = await _cost_repository.GetAsync(documentId, costId);
+        var entity = await _costRepository.GetAsync(documentId, costId);
         return entity is null ? null : MapToDto(entity);
     }
 
@@ -122,8 +109,8 @@ public class DocumentCostService : IDocumentCostService
     public async Task<IReadOnlyList<DocumentCostItemDto>> GetCostItemsAsync(int documentId, int costId)
     {
         await EnsureCostExistsAsync(documentId, costId);
-        var items = await _costItem_repository.GetByCostAsync(costId);
-        return items.Select(MapToItemDto).ToList();
+        var items = await _costItemRepository.GetByCostAsync(costId);
+        return [.. items.Select(MapToItemDto)];
     }
 
     public async Task<DocumentCostItemDto?> GetCostItemByIdAsync(int documentId, int costId, int itemId)
@@ -163,42 +150,42 @@ public class DocumentCostService : IDocumentCostService
         await EnsureCostExistsAsync(documentId, costId);
 
         var entity = await _costItemRepository.GetAsync(costId, itemId, track: true);
-        if (entity is null)
+        if (entity is not null)
         {
-            throw new NotFoundException(ErrorMessages.DocumentCostItemNotFound, itemId.ToString(), nameof(DocumentCostLineItem));
+            EnsureRowVersion(entity.DokumentTroskoviStavkaTimeStamp, expectedRowVersion, itemId, nameof(DocumentCostLineItem));
+
+            if (dto.Quantity.HasValue)
+            {
+                entity.Kolicina = dto.Quantity.Value;
+            }
+
+            if (dto.AmountNet.HasValue)
+            {
+                entity.Iznos = dto.AmountNet.Value;
+            }
+
+            if (dto.AmountVat.HasValue)
+            {
+                entity.IznosValuta = dto.AmountVat.Value;
+            }
+
+            if (dto.TaxRateId.HasValue)
+            {
+                entity.IDNacinDeljenjaTroskova = dto.TaxRateId.Value;
+            }
+
+            if (dto.Note is not null)
+            {
+                entity.Napomena = dto.Note;
+            }
+
+            _costItemRepository.Update(entity);
+            await _unitOfWork.SaveChangesAsync();
+
+            return MapToItemDto(entity);
         }
 
-        EnsureRowVersion(entity.DokumentTroskoviStavkaTimeStamp, expectedRowVersion, itemId, nameof(DocumentCostLineItem));
-
-        if (dto.Quantity.HasValue)
-        {
-            entity.Kolicina = dto.Quantity.Value;
-        }
-
-        if (dto.AmountNet.HasValue)
-        {
-            entity.Iznos = dto.AmountNet.Value;
-        }
-
-        if (dto.AmountVat.HasValue)
-        {
-            entity.IznosValuta = dto.AmountVat.Value;
-        }
-
-        if (dto.TaxRateId.HasValue)
-        {
-            entity.IDNacinDeljenjaTroskova = dto.TaxRateId.Value;
-        }
-
-        if (dto.Note is not null)
-        {
-            entity.Napomena = dto.Note;
-        }
-
-        _costItemRepository.Update(entity);
-        await _unitOfWork.SaveChangesAsync();
-
-        return MapToItemDto(entity);
+        throw new NotFoundException(ErrorMessages.DocumentCostItemNotFound, itemId.ToString(), nameof(DocumentCostLineItem));
     }
 
     public async Task<bool> DeleteCostItemAsync(int documentId, int costId, int itemId)
@@ -228,24 +215,16 @@ public class DocumentCostService : IDocumentCostService
         int processed;
         decimal distributedAmount;
 
-        switch (dto.DistributionMethodId)
+        (processed, distributedAmount) = dto.DistributionMethodId switch
         {
-            case 1:
-                (processed, distributedAmount) = ApplyDistribution(cost.IznosBezPDV, items, item => item.Kolicina ?? 0);
-                break;
-            case 2:
-                (processed, distributedAmount) = ApplyDistribution(cost.IznosBezPDV, items, item => item.Iznos);
-                break;
-            case 3:
-                (processed, distributedAmount) = ApplyManualDistribution(items, dto.ManualDistribution);
-                break;
-            default:
-                throw new Common.Exceptions.ValidationException(ErrorMessages.InvalidCostDistributionMethod, new Dictionary<string, string[]>
-                {
-                    [nameof(dto.DistributionMethodId)] = new[] { ErrorMessages.InvalidCostDistributionMethod }
-                });
-        }
-
+            1 => ApplyDistribution(cost.IznosBezPDV, items, item => item.Kolicina ?? 0),
+            2 => ApplyDistribution(cost.IznosBezPDV, items, item => item.Iznos),
+            3 => ApplyManualDistribution(items, dto.ManualDistribution),
+            _ => throw new Common.Exceptions.ValidationException(ErrorMessages.InvalidCostDistributionMethod, new Dictionary<string, string[]>
+            {
+                [nameof(dto.DistributionMethodId)] = [ErrorMessages.InvalidCostDistributionMethod]
+            }),
+        };
         _costItemRepository.UpdateRange(items);
         await _unitOfWork.SaveChangesAsync();
 
@@ -296,7 +275,7 @@ public class DocumentCostService : IDocumentCostService
         {
             throw new Common.Exceptions.ValidationException(ErrorMessages.CostManualDistributionRequired, new Dictionary<string, string[]>
             {
-                [nameof(CostDistributionRequestDto.ManualDistribution)] = new[] { ErrorMessages.CostManualDistributionRequired }
+                [nameof(CostDistributionRequestDto.ManualDistribution)] = [ErrorMessages.CostManualDistributionRequired]
             });
         }
 
@@ -328,12 +307,12 @@ public class DocumentCostService : IDocumentCostService
     private async Task<DocumentCost> EnsureCostExistsAsync(int documentId, int costId, bool track = false)
     {
         var entity = await _costRepository.GetAsync(documentId, costId, track);
-        if (entity is null)
+        if (entity is not null)
         {
-            throw new NotFoundException(ErrorMessages.DocumentCostNotFound, costId.ToString(), nameof(DocumentCost));
+            return entity;
         }
 
-        return entity;
+        throw new NotFoundException(ErrorMessages.DocumentCostNotFound, costId.ToString(), nameof(DocumentCost));
     }
 
     private static async Task ValidateAsync<T>(IValidator<T> validator, T instance)
