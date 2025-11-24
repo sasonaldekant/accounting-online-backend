@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ERPAccounting.Domain.Entities;
 using ERPAccounting.Common.Interfaces;
-using ERPAccounting.Infrastructure.Persistence.Interceptors;
 
 namespace ERPAccounting.Infrastructure.Data
 {
@@ -13,6 +12,11 @@ namespace ERPAccounting.Infrastructure.Data
     /// Entity Framework Core DbContext for ERP Accounting system.
     /// Maps all tables and configures relationships.
     /// Database-First approach - entities map to existing tables.
+    /// 
+    /// AUDIT SYSTEM:
+    /// - Entity-level audit (CreatedAt, UpdatedAt, IsDeleted) is NOT used
+    /// - All auditing is done via ApiAuditLog + ApiAuditLogEntityChanges tables
+    /// - See ApiAuditMiddleware for automatic API request/response logging
     /// </summary>
     public class AppDbContext : DbContext
     {
@@ -25,13 +29,11 @@ namespace ERPAccounting.Infrastructure.Data
             _currentUserService = currentUserService;
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            // Register AuditInterceptor for automatic audit logging
-            optionsBuilder.AddInterceptors(new AuditInterceptor(_currentUserService));
-            
-            base.OnConfiguring(optionsBuilder);
-        }
+        // NOTE: Legacy AuditInterceptor has been removed
+        // Audit is now handled by:
+        // 1. ApiAuditMiddleware - logs all API requests/responses to tblAPIAuditLog
+        // 2. AuditLogService - tracks entity changes to tblAPIAuditLogEntityChanges
+        // This provides complete audit trail without modifying entity schemas
 
         // ═══════════════════════════════════════════════════════════════
         // MAIN TABLES
