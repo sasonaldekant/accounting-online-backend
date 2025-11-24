@@ -181,6 +181,22 @@ namespace ERPAccounting.Infrastructure.Data
                 .IsRowVersion()
                 .IsConcurrencyToken();
 
+            costEntity.Property(e => e.NazivTroska)
+                .HasColumnType("varchar(255)")
+                .HasMaxLength(255);
+
+            costEntity.Property(e => e.IznosBezPDV)
+                .HasColumnType("money")
+                .HasPrecision(19, 4);
+
+            costEntity.Property(e => e.IznosPDV)
+                .HasColumnType("money")
+                .HasPrecision(19, 4);
+
+            costEntity.Property(e => e.Kurs)
+                .HasColumnType("money")
+                .HasPrecision(19, 4);
+
             // Foreign keys
             costEntity.HasOne(e => e.Document)
                 .WithMany(e => e.DependentCosts)
