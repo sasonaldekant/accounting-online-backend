@@ -34,7 +34,8 @@ public class DocumentCost : BaseEntity
     [Column("Opis")]
     public string? Opis { get; set; }
 
-    [Column("NazivTroska")]
+    [StringLength(255)]
+    [Column("NazivTroska", TypeName = "varchar(255)")]
     public string? NazivTroska { get; set; }
 
     [Required, Column("IDStatus")]
