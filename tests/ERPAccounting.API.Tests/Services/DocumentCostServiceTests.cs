@@ -136,7 +136,7 @@ public class DocumentCostServiceTests
         var unitOfWork = new Mock<IUnitOfWork>();
 
         costRepo.Setup(r => r.GetAsync(1, 2, true, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DocumentCost { IDDokument = 1, IDDokumentTroskovi = 2, IznosBezPDV = 120 });
+            .ReturnsAsync(new DocumentCost { IDDokument = 1, IDDokumentTroskovi = 2 });
 
         var items = new List<DocumentCostLineItem>
         {
