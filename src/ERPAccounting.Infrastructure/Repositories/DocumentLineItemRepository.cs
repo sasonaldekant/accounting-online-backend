@@ -46,4 +46,9 @@ public class DocumentLineItemRepository : IDocumentLineItemRepository
     {
         _context.DocumentLineItems.Update(entity);
     }
+
+    public void Delete(DocumentLineItem entity)
+    {
+        _context.DocumentLineItems.Remove(entity);
+    }
 }
