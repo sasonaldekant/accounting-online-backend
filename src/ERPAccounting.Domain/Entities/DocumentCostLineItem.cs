@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ERPAccounting.Domain.Interfaces;
 
 namespace ERPAccounting.Domain.Entities;
 
 [Table("tblDokumentTroskoviStavka")]
-public class DocumentCostLineItem : BaseEntity
+public class DocumentCostLineItem : BaseEntity, ISoftDeletable
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -52,12 +53,15 @@ public class DocumentCostLineItem : BaseEntity
     
     [Column("Kartica", TypeName = "money")]
     public decimal Kartica { get; set; } = 0;
-    
+
     [Column("Virman", TypeName = "money")]
     public decimal Virman { get; set; } = 0;
-    
+
     [Column("Kolicina", TypeName = "money")]
     public decimal? Kolicina { get; set; } = 0;
+
+    [Column("IsDeleted")]
+    public bool IsDeleted { get; set; } = false;
     
     // Navigation
     public virtual DocumentCost DocumentCost { get; set; } = null!;
