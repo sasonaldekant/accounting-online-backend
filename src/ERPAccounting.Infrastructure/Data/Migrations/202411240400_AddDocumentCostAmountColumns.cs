@@ -9,45 +9,52 @@ namespace ERPAccounting.Infrastructure.Data.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "NazivTroska",
-                table: "tblDokumentTroskovi",
-                type: "varchar(255)",
-                maxLength: 255,
-                nullable: true);
+            migrationBuilder.Sql(
+                @"IF COL_LENGTH('tblDokumentTroskovi', 'NazivTroska') IS NULL
+                  BEGIN
+                      ALTER TABLE [tblDokumentTroskovi]
+                          ADD [NazivTroska] varchar(255) NULL;
+                  END");
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "IznosBezPDV",
-                table: "tblDokumentTroskovi",
-                type: "money",
-                precision: 19,
-                scale: 4,
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql(
+                @"IF COL_LENGTH('tblDokumentTroskovi', 'IznosBezPDV') IS NULL
+                  BEGIN
+                      ALTER TABLE [tblDokumentTroskovi]
+                          ADD [IznosBezPDV] money NOT NULL
+                              CONSTRAINT [DF_tblDokumentTroskovi_IznosBezPDV] DEFAULT 0;
+                  END");
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "IznosPDV",
-                table: "tblDokumentTroskovi",
-                type: "money",
-                precision: 19,
-                scale: 4,
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql(
+                @"IF COL_LENGTH('tblDokumentTroskovi', 'IznosPDV') IS NULL
+                  BEGIN
+                      ALTER TABLE [tblDokumentTroskovi]
+                          ADD [IznosPDV] money NOT NULL
+                              CONSTRAINT [DF_tblDokumentTroskovi_IznosPDV] DEFAULT 0;
+                  END");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "NazivTroska",
-                table: "tblDokumentTroskovi");
+            migrationBuilder.Sql(
+                @"IF COL_LENGTH('tblDokumentTroskovi', 'NazivTroska') IS NOT NULL
+                  BEGIN
+                      ALTER TABLE [tblDokumentTroskovi]
+                          DROP COLUMN [NazivTroska];
+                  END");
 
-            migrationBuilder.DropColumn(
-                name: "IznosBezPDV",
-                table: "tblDokumentTroskovi");
+            migrationBuilder.Sql(
+                @"IF COL_LENGTH('tblDokumentTroskovi', 'IznosBezPDV') IS NOT NULL
+                  BEGIN
+                      ALTER TABLE [tblDokumentTroskovi]
+                          DROP COLUMN [IznosBezPDV];
+                  END");
 
-            migrationBuilder.DropColumn(
-                name: "IznosPDV",
-                table: "tblDokumentTroskovi");
+            migrationBuilder.Sql(
+                @"IF COL_LENGTH('tblDokumentTroskovi', 'IznosPDV') IS NOT NULL
+                  BEGIN
+                      ALTER TABLE [tblDokumentTroskovi]
+                          DROP COLUMN [IznosPDV];
+                  END");
         }
     }
 }
