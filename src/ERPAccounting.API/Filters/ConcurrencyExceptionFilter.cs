@@ -36,37 +36,38 @@ public class ConcurrencyExceptionFilter : IExceptionFilter
 
     private void HandleConflictException(ExceptionContext context, ConflictException exception)
     {
+        var concurrencyErrors = new List<string>
+        {
+            $"Resource '{exception.ResourceType ?? "Resource"}' has been modified by another user."
+        };
+
+        if (!string.IsNullOrWhiteSpace(exception.ResourceId))
+        {
+            concurrencyErrors.Add($"Resource ID: {exception.ResourceId}");
+        }
+
+        concurrencyErrors.Add($"Expected ETag: {exception.ExpectedETag ?? "N/A"}");
+        concurrencyErrors.Add($"Current ETag: {exception.CurrentETag ?? "N/A"}");
+        concurrencyErrors.Add("Please refresh the entity and try again.");
+
         _logger.LogWarning(
             exception,
-            "Concurrency conflict detected: Entity={Entity}, ExpectedETag={ExpectedETag}, CurrentETag={CurrentETag}",
-            exception.Entity,
+            "Concurrency conflict detected: ResourceType={ResourceType}, ResourceId={ResourceId}, ExpectedETag={ExpectedETag}, CurrentETag={CurrentETag}",
+            exception.ResourceType,
+            exception.ResourceId,
             exception.ExpectedETag,
             exception.CurrentETag);
 
         var problemDetails = new ProblemDetailsDto
         {
-            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8",
-            Title = "Concurrency Conflict",
             Status = StatusCodes.Status409Conflict,
+            Title = exception.Title,
             Detail = exception.Detail,
+            ErrorCode = exception.ErrorCode,
             Instance = context.HttpContext.Request.Path,
-            TraceId = context.HttpContext.TraceIdentifier,
             Errors = new Dictionary<string, string[]>
             {
-                ["concurrency"] = new[]
-                {
-                    $"Entity '{exception.Entity}' has been modified by another user.",
-                    $"Expected ETag: {exception.ExpectedETag}",
-                    $"Current ETag: {exception.CurrentETag}",
-                    "Please refresh the entity and try again."
-                }
-            },
-            Extensions = new Dictionary<string, object?>
-            {
-                ["entityType"] = exception.Entity,
-                ["expectedETag"] = exception.ExpectedETag,
-                ["currentETag"] = exception.CurrentETag,
-                ["errorCode"] = "CONCURRENCY_CONFLICT"
+                ["concurrency"] = concurrencyErrors.ToArray()
             }
         };
 
@@ -92,12 +93,10 @@ public class ConcurrencyExceptionFilter : IExceptionFilter
 
         var problemDetails = new ProblemDetailsDto
         {
-            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8",
-            Title = "Concurrency Conflict",
             Status = StatusCodes.Status409Conflict,
+            Title = "Concurrency Conflict",
             Detail = "The record has been modified by another user since it was retrieved.",
             Instance = context.HttpContext.Request.Path,
-            TraceId = context.HttpContext.TraceIdentifier,
             Errors = new Dictionary<string, string[]>
             {
                 ["concurrency"] = new[]
@@ -106,10 +105,6 @@ public class ConcurrencyExceptionFilter : IExceptionFilter
                     "The record may have been modified or deleted by another user.",
                     "Please refresh the entity and try again."
                 }
-            },
-            Extensions = new Dictionary<string, object?>
-            {
-                ["errorCode"] = "DATABASE_CONCURRENCY_CONFLICT"
             }
         };
 
