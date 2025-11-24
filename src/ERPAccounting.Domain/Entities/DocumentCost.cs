@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace ERPAccounting.Domain.Entities;
 
@@ -34,10 +35,6 @@ public class DocumentCost : BaseEntity
     [Column("Opis")]
     public string? Opis { get; set; }
 
-    [StringLength(255)]
-    [Column("NazivTroska", TypeName = "varchar(255)")]
-    public string? NazivTroska { get; set; }
-
     [Required, Column("IDStatus")]
     public int IDStatus { get; set; }
 
@@ -47,12 +44,6 @@ public class DocumentCost : BaseEntity
     [Column("Kurs", TypeName = "money")]
     public decimal? Kurs { get; set; } = 0;
 
-    [Column("IznosBezPDV", TypeName = "money")]
-    public decimal IznosBezPDV { get; set; } = 0;
-
-    [Column("IznosPDV", TypeName = "money")]
-    public decimal IznosPDV { get; set; } = 0;
-    
     /// <summary>CRITICAL: RowVersion for ETag concurrency</summary>
     [Timestamp, Column("DokumentTroskoviTimeStamp")]
     public byte[]? DokumentTroskoviTimeStamp { get; set; }
@@ -61,4 +52,33 @@ public class DocumentCost : BaseEntity
     public virtual Document Document { get; set; } = null!;
 
     public virtual ICollection<DocumentCostLineItem> CostLineItems { get; set; } = new List<DocumentCostLineItem>();
+
+    // ═══════════════════════════════════════════════════════════════
+    // COMPUTED PROPERTIES - calculated from child line items
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Ukupan iznos bez PDV (suma svih stavki)
+    /// NOTE: This is NOT a database column - it's computed from CostLineItems
+    /// </summary>
+    [NotMapped]
+    public decimal IznosBezPDV => CostLineItems?.Sum(item => item.Iznos) ?? 0;
+
+    /// <summary>
+    /// Ukupan iznos PDV (suma svih PDV iz stavki)
+    /// NOTE: This is NOT a database column - it's computed from CostLineItems VAT totals
+    /// </summary>
+    [NotMapped]
+    public decimal IznosPDV
+    {
+        get
+        {
+            if (CostLineItems == null || !CostLineItems.Any())
+                return 0;
+
+            return CostLineItems.Sum(item =>
+                item.VATItems?.Sum(vat => vat.IznosPDV) ?? 0
+            );
+        }
+    }
 }
