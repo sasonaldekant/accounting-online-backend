@@ -271,7 +271,9 @@ public class Document : BaseEntity, ISoftDeletable
     
     [Column("IDMerenje")]
     public int? IDMerenje { get; set; }
-    
+
+    public bool IsDeleted { get; set; } = false;
+
     // Navigation properties
     public virtual ICollection<DocumentLineItem> LineItems { get; set; } = new List<DocumentLineItem>();
     public virtual ICollection<DocumentCost> DependentCosts { get; set; } = new List<DocumentCost>();
