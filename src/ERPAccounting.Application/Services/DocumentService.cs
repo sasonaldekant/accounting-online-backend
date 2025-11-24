@@ -44,7 +44,7 @@ public class DocumentService : IDocumentService
 
     public async Task<PaginatedResult<DocumentDto>> GetDocumentsAsync(DocumentQueryParameters query)
     {
-        query ¿= new DocumentQueryParameters();
+        query ??= new DocumentQueryParameters();
         await ValidateAsync(_queryValidator, query);
 
         var (items, totalCount) = await _documentRepository.GetPaginatedAsync(query.Page, query.PageSize, query.Search);
@@ -140,7 +140,7 @@ public class DocumentService : IDocumentService
         }
 
         var errors = validationResult.Errors
-            .GroupBy(failure => failure.PropertyName ¿ string.Empty)
+            .GroupBy(failure => failure.PropertyName ?? string.Empty)
             .ToDictionary(
                 group => group.Key,
                 group => group.Select(failure => failure.ErrorMessage).ToArray());
