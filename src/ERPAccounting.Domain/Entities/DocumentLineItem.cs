@@ -1,12 +1,15 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ERPAccounting.Domain.Interfaces;
 
 namespace ERPAccounting.Domain.Entities;
 
+/// <summary>
+/// DocumentLineItem entity - maps to tblStavkaDokumenta table.
+/// Represents individual line items within a document (articles, quantities, prices).
+/// </summary>
 [Table("tblStavkaDokumenta")]
-public class DocumentLineItem : BaseEntity, ISoftDeletable
+public class DocumentLineItem
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -139,7 +142,11 @@ public class DocumentLineItem : BaseEntity, ISoftDeletable
     [Column("IDVrstaObroka")]
     public int? IDVrstaObroka { get; set; }
     
-    /// <summary>CRITICAL: RowVersion for ETag concurrency</summary>
+    /// <summary>
+    /// CRITICAL: RowVersion for ETag concurrency control.
+    /// This timestamp is automatically updated by SQL Server on every UPDATE.
+    /// Used for optimistic concurrency detection in PATCH operations.
+    /// </summary>
     [Timestamp, Column("StavkaDokumentaTimeStamp")]
     public byte[]? StavkaDokumentaTimeStamp { get; set; }
     
@@ -209,8 +216,6 @@ public class DocumentLineItem : BaseEntity, ISoftDeletable
     [Column("IDBoja")]
     public int? IDBoja { get; set; }
 
-    public bool IsDeleted { get; set; }
-
-    // Navigation
+    // Navigation property
     public virtual Document Document { get; set; } = null!;
 }
