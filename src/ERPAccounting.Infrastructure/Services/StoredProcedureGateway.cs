@@ -134,6 +134,7 @@ public class StoredProcedureGateway : IStoredProcedureGateway
                             IDDokumentTroskovi INT,
                             IDDokumentTroskoviStavka INT NULL,
                             ListaTroskova NVARCHAR(MAX),
+                            -- allow the stored procedure to return null totals
                             Osnovica DECIMAL(19,4) NULL,
                             Pdv DECIMAL(19,4) NULL
                         );
