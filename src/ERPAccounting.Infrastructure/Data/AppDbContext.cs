@@ -62,24 +62,13 @@ namespace ERPAccounting.Infrastructure.Data
             {
                 if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
                 {
-                    modelBuilder.Entity(entityType.ClrType)
-                        .Property<bool>(nameof(ISoftDeletable.IsDeleted))
-                        .HasColumnName("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    var parameter = Expression.Parameter(entityType.ClrType, "e");
-                    var isDeletedProperty = Expression.Call(
-                        typeof(EF).GetMethod(nameof(EF.Property), BindingFlags.Static | BindingFlags.Public)!
-                            .MakeGenericMethod(typeof(bool)),
-                        parameter,
-                        Expression.Constant(nameof(ISoftDeletable.IsDeleted)));
-
-                    var filter = Expression.Lambda(Expression.Equal(isDeletedProperty, Expression.Constant(false)), parameter);
-
-                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
+                    ConfigureIsDeletedFilter(modelBuilder.Entity(entityType.ClrType));
                 }
             }
+
+            // Legacy soft-deleted troškovi: iako više ne implementiraju ISoftDeletable, stari redovi imaju IsDeleted=1
+            ApplyLegacySoftDeleteFilter<DocumentCost>(modelBuilder);
+            ApplyLegacySoftDeleteFilter<DocumentCostLineItem>(modelBuilder);
 
             // ═══════════════════════════════════════════════════════════════
             // DOCUMENT KONFIGURACIJA
@@ -274,6 +263,45 @@ namespace ERPAccounting.Infrastructure.Data
                 .IsRequired();
 
             base.OnModelCreating(modelBuilder);
+        }
+
+        private static void ConfigureIsDeletedFilter(EntityTypeBuilder builder)
+        {
+            builder.Property<bool>(nameof(ISoftDeletable.IsDeleted))
+                .HasColumnName(nameof(ISoftDeletable.IsDeleted))
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
+
+            var parameter = Expression.Parameter(builder.Metadata.ClrType, "e");
+            var isDeletedProperty = Expression.Call(
+                typeof(EF).GetMethod(nameof(EF.Property), BindingFlags.Static | BindingFlags.Public)!
+                    .MakeGenericMethod(typeof(bool)),
+                parameter,
+                Expression.Constant(nameof(ISoftDeletable.IsDeleted)));
+
+            var filter = Expression.Lambda(Expression.Equal(isDeletedProperty, Expression.Constant(false)), parameter);
+
+            builder.HasQueryFilter(filter);
+        }
+
+        private static void ApplyLegacySoftDeleteFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class
+        {
+            var entity = modelBuilder.Entity<TEntity>();
+            entity.Property<bool>("IsDeleted")
+                .HasColumnName("IsDeleted")
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
+
+            var parameter = Expression.Parameter(typeof(TEntity), "e");
+            var isDeletedProperty = Expression.Call(
+                typeof(EF).GetMethod(nameof(EF.Property), BindingFlags.Static | BindingFlags.Public)!
+                    .MakeGenericMethod(typeof(bool)),
+                parameter,
+                Expression.Constant("IsDeleted"));
+
+            var filter = Expression.Lambda(Expression.Equal(isDeletedProperty, Expression.Constant(false)), parameter);
+
+            entity.HasQueryFilter(filter);
         }
     }
 }
