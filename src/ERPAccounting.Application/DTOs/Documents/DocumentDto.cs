@@ -15,8 +15,4 @@ public record DocumentDto(
     string? Note,
     bool Processed,
     bool Posted,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
-    int? CreatedBy,
-    int? UpdatedBy,
     string ETag);

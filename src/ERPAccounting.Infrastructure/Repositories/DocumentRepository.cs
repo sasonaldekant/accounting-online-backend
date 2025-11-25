@@ -71,4 +71,9 @@ public class DocumentRepository : IDocumentRepository
     {
         _context.Documents.Update(document);
     }
+
+    public void Delete(Document document)
+    {
+        _context.Documents.Remove(document);
+    }
 }

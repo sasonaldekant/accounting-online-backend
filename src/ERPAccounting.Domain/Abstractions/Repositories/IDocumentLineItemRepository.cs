@@ -17,4 +17,10 @@ public interface IDocumentLineItemRepository
     Task AddAsync(DocumentLineItem entity, CancellationToken cancellationToken = default);
 
     void Update(DocumentLineItem entity);
+
+    /// <summary>
+    /// Marks the document line item for deletion. Call SaveChangesAsync on Unit of Work to persist.
+    /// </summary>
+    /// <param name="entity">The document line item to delete</param>
+    void Delete(DocumentLineItem entity);
 }

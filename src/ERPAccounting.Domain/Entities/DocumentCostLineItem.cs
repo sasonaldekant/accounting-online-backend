@@ -5,8 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ERPAccounting.Domain.Entities;
 
+/// <summary>
+/// DocumentCostLineItem entity - maps to tblDokumentTroskoviStavka table.
+/// Represents individual line items within a cost document (cost type, amount, distribution method).
+/// </summary>
 [Table("tblDokumentTroskoviStavka")]
-public class DocumentCostLineItem : BaseEntity
+public class DocumentCostLineItem
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -37,10 +41,11 @@ public class DocumentCostLineItem : BaseEntity
     [Column("DodajPDVNaTroskove")]
     public int DodajPDVNaTroskove { get; set; } = 0;
 
-    [Column("Napomena")]
-    public string? Napomena { get; set; }
-
-    /// <summary>CRITICAL: RowVersion for ETag concurrency</summary>
+    /// <summary>
+    /// CRITICAL: RowVersion for ETag concurrency control.
+    /// This timestamp is automatically updated by SQL Server on every UPDATE.
+    /// Used for optimistic concurrency detection.
+    /// </summary>
     [Timestamp, Column("DokumentTroskoviStavkaTimeStamp")]
     public byte[]? DokumentTroskoviStavkaTimeStamp { get; set; }
     
@@ -59,7 +64,7 @@ public class DocumentCostLineItem : BaseEntity
     [Column("Kolicina", TypeName = "money")]
     public decimal? Kolicina { get; set; } = 0;
     
-    // Navigation
+    // Navigation properties
     public virtual DocumentCost DocumentCost { get; set; } = null!;
     public virtual ICollection<DocumentCostVAT> VATItems { get; set; } = new List<DocumentCostVAT>();
 }

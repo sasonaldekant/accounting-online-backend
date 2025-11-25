@@ -147,7 +147,8 @@ public class DocumentCostService : IDocumentCostService
             Iznos = dto.AmountNet,
             IznosValuta = dto.AmountVat,
             IDNacinDeljenjaTroskova = dto.TaxRateId,
-            Napomena = dto.Note,
+            // NOTE: Napomena property does not exist in DocumentCostLineItem entity
+            // If notes are needed, store in DocumentCost.Opis or add column to database
             SveStavke = false,
             IDStatus = 1
         };
@@ -191,10 +192,9 @@ public class DocumentCostService : IDocumentCostService
             entity.IDNacinDeljenjaTroskova = dto.TaxRateId.Value;
         }
 
-        if (dto.Note is not null)
-        {
-            entity.Napomena = dto.Note;
-        }
+        // NOTE: Napomena property does not exist in DocumentCostLineItem entity
+        // If notes functionality is needed, database schema needs to be updated
+        // or notes should be stored at DocumentCost level in Opis field
 
         _costItemRepository.Update(entity);
         await _unitOfWork.SaveChangesAsync();
@@ -283,7 +283,7 @@ public class DocumentCostService : IDocumentCostService
 
             if (i == items.Count - 1)
             {
-                share = totalAmount - distributed;
+            share = totalAmount - distributed;
             }
 
             items[i].Iznos = share;
@@ -395,6 +395,8 @@ public class DocumentCostService : IDocumentCostService
             ? string.Empty
             : Convert.ToBase64String(entity.DokumentTroskoviStavkaTimeStamp);
 
+        // NOTE: Napomena property does not exist in DocumentCostLineItem entity
+        // Return null for Note field in DTO until database schema is updated
         return new DocumentCostItemDto(
             entity.IDDokumentTroskoviStavka,
             entity.IDDokumentTroskovi,
@@ -403,7 +405,7 @@ public class DocumentCostService : IDocumentCostService
             entity.Iznos,
             entity.IznosValuta ?? 0,
             entity.IDNacinDeljenjaTroskova,
-            entity.Napomena,
+            null, // Note field - Napomena does not exist in entity
             etag);
     }
 }

@@ -53,12 +53,8 @@ namespace ERPAccounting.Application.DTOs
         // ══════════════════════════════════════════════════
         // KONKURENTNOST - OBAVEZNO!
         /// <summary>ETag za If-Match header (Base64 RowVersion)</summary>
-        string ETag,
+        string ETag
         // ══════════════════════════════════════════════════
-        DateTime CreatedAt,
-        DateTime UpdatedAt,
-        int? CreatedBy,
-        int? UpdatedBy
     );
 
     /// <summary>
@@ -73,7 +69,6 @@ namespace ERPAccounting.Application.DTOs
         decimal? Total,
         decimal? TaxAmount,
         bool CalculateTax,
-        string ETag,
-        DateTime UpdatedAt
+        string ETag
     );
 }

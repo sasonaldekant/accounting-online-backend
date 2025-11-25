@@ -122,7 +122,10 @@ namespace ERPAccounting.Application.Services
                 throw new NotFoundException(ErrorMessages.DocumentLineItemNotFound, itemId.ToString(), nameof(DocumentLineItem));
             }
 
-            entity.IsDeleted = true;
+            // NOTE: Changed from soft delete to hard delete
+            // Database schema does not have IsDeleted column
+            // Use ApiAuditLog tables for audit trail instead
+            _lineItemRepository.Delete(entity);
             await _unitOfWork.SaveChangesAsync();
         }
 

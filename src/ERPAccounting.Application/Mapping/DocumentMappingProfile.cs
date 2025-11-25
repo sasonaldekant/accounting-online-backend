@@ -23,10 +23,6 @@ public class DocumentMappingProfile : Profile
             .ForMember(dest => dest.Note, opt => opt.MapFrom(src => src.Napomena))
             .ForMember(dest => dest.Processed, opt => opt.MapFrom(src => src.ObradjenDokument))
             .ForMember(dest => dest.Posted, opt => opt.MapFrom(src => src.ProknjizenDokument))
-            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
-            .ForMember(dest => dest.CreatedBy, opt => opt.MapFrom(src => src.CreatedBy))
-            .ForMember(dest => dest.UpdatedBy, opt => opt.MapFrom(src => src.UpdatedBy))
             .ForMember(dest => dest.ETag, opt => opt.MapFrom(src => src.DokumentTimeStamp == null ? string.Empty : Convert.ToBase64String(src.DokumentTimeStamp)));
 
         CreateMap<CreateDocumentDto, Document>()
@@ -43,7 +39,8 @@ public class DocumentMappingProfile : Profile
             .ForMember(dest => dest.ProknjizenDokument, opt => opt.MapFrom(src => src.Posted))
             .ForMember(dest => dest.DokumentTimeStamp, opt => opt.Ignore())
             .ForMember(dest => dest.LineItems, opt => opt.Ignore())
-            .ForMember(dest => dest.DependentCosts, opt => opt.Ignore());
+            .ForMember(dest => dest.DependentCosts, opt => opt.Ignore())
+            .ForMember(dest => dest.AdvanceVATs, opt => opt.Ignore());
 
         CreateMap<UpdateDocumentDto, Document>()
             .ForMember(dest => dest.IDDokument, opt => opt.Ignore())
@@ -58,10 +55,8 @@ public class DocumentMappingProfile : Profile
             .ForMember(dest => dest.ObradjenDokument, opt => opt.MapFrom(src => src.Processed))
             .ForMember(dest => dest.ProknjizenDokument, opt => opt.MapFrom(src => src.Posted))
             .ForMember(dest => dest.DokumentTimeStamp, opt => opt.Ignore())
-            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
-            .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
             .ForMember(dest => dest.LineItems, opt => opt.Ignore())
-            .ForMember(dest => dest.DependentCosts, opt => opt.Ignore());
+            .ForMember(dest => dest.DependentCosts, opt => opt.Ignore())
+            .ForMember(dest => dest.AdvanceVATs, opt => opt.Ignore());
     }
 }

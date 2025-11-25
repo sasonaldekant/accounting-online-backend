@@ -30,10 +30,6 @@ public class DocumentLineItemMappingProfile : Profile
                 dest => dest.ETag,
                 opt => opt.MapFrom(src => src.StavkaDokumentaTimeStamp == null
                     ? string.Empty
-                    : Convert.ToBase64String(src.StavkaDokumentaTimeStamp)))
-            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
-            .ForMember(dest => dest.CreatedBy, opt => opt.MapFrom(src => src.CreatedBy))
-            .ForMember(dest => dest.UpdatedBy, opt => opt.MapFrom(src => src.UpdatedBy));
+                    : Convert.ToBase64String(src.StavkaDokumentaTimeStamp)));
     }
 }

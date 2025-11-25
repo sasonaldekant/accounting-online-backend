@@ -1,34 +1,28 @@
-using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ERPAccounting.Domain.Entities;
 
 /// <summary>
-/// Dependent Cost Line Item (tblDokumentTroskoviStavka)
-/// KRITIČNO: Sa RowVersion za ETag konkurentnost
+/// DependentCostLineItem entity - represents the distribution of costs to document line items.
+/// Maps cost line items to specific document line items.
 /// </summary>
-public class DependentCostLineItem : BaseEntity
+public class DependentCostLineItem
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid DependentCostId { get; set; }
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
     
-    public int CostTypeId { get; set; }
-    public int DistributionMethodId { get; set; }
+    [Required]
+    public int DocumentCostLineItemId { get; set; }
+    
+    [Required]
+    public int DocumentLineItemId { get; set; }
+    
+    [Column(TypeName = "decimal(19, 4)")]
     public decimal Amount { get; set; }
-    public bool CalculateTax { get; set; } = true;
-    public int VatRate { get; set; } = 20;
     
-    /// <summary>
-    /// JSON array of article IDs for distribution: "[1,2,3]"
-    /// </summary>
-    public string ArticleIds { get; set; } = "[]";
-    
-    /// <summary>
-    /// KRITIČNO: RowVersion za konkurentnost (ETag)
-    /// </summary>
-    [Timestamp]
-    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
-    
-    // Navigation
-    public virtual DocumentCost DependentCost { get; set; } = null!;
+    // Navigation properties
+    public virtual DocumentCostLineItem? DocumentCostLineItem { get; set; }
+    public virtual DocumentLineItem? DocumentLineItem { get; set; }
 }

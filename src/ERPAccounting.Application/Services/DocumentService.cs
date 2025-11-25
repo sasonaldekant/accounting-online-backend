@@ -114,9 +114,8 @@ public class DocumentService : IDocumentService
             return false;
         }
 
-        entity.IsDeleted = true;
-
-        _documentRepository.Update(entity);
+        // Hard delete - remove from database
+        _documentRepository.Delete(entity);
         await _unitOfWork.SaveChangesAsync();
 
         return true;
@@ -144,7 +143,7 @@ public class DocumentService : IDocumentService
             .GroupBy(failure => failure.PropertyName ?? string.Empty)
             .ToDictionary(
                 group => group.Key,
-                group => group.Select(failure => failure.ErrorMessage).ToArray());
+                group => group.Select(static failure => failure.ErrorMessage).ToArray());
 
         throw new ValidationException(ErrorMessages.ValidationFailed, errors);
     }

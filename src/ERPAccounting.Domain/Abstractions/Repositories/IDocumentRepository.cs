@@ -23,4 +23,10 @@ public interface IDocumentRepository
     Task AddAsync(Document document, CancellationToken cancellationToken = default);
 
     void Update(Document document);
+
+    /// <summary>
+    /// Marks the document for deletion. Call SaveChangesAsync on Unit of Work to persist.
+    /// </summary>
+    /// <param name="document">The document to delete</param>
+    void Delete(Document document);
 }

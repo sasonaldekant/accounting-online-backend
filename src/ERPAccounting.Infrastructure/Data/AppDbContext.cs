@@ -1,21 +1,18 @@
 using System;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ERPAccounting.Domain.Entities;
 using ERPAccounting.Common.Interfaces;
-using ERPAccounting.Domain.Interfaces;
 using ERPAccounting.Infrastructure.Persistence.Interceptors;
 
 namespace ERPAccounting.Infrastructure.Data
 {
     /// <summary>
-    /// Entity Framework Core DbContext za ERP Accounting sistem
-    /// Mapira sve tabele i konfigurira relacije
+    /// Entity Framework Core DbContext for ERP Accounting system.
+    /// Maps all tables and configures relationships.
+    /// Database-First approach - entities map to existing tables.
     /// </summary>
     public class AppDbContext : DbContext
     {
@@ -30,14 +27,15 @@ namespace ERPAccounting.Infrastructure.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Registruj AuditInterceptor
+            // Register AuditInterceptor for automatic audit logging
             optionsBuilder.AddInterceptors(new AuditInterceptor(_currentUserService));
             
             base.OnConfiguring(optionsBuilder);
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // GLAVNE TABELE
+        // MAIN TABLES
+        // ═══════════════════════════════════════════════════════════════
         public DbSet<Document> Documents { get; set; } = null!;
         public DbSet<DocumentLineItem> DocumentLineItems { get; set; } = null!;
         public DbSet<DocumentCost> DocumentCosts { get; set; } = null!;
@@ -47,47 +45,25 @@ namespace ERPAccounting.Infrastructure.Data
         public DbSet<DocumentCostVAT> DocumentCostVATs { get; set; } = null!;
 
         // ═══════════════════════════════════════════════════════════════
-        // AUDIT LOG TABELE
+        // AUDIT LOG TABLES (new tables for tracking changes)
+        // ═══════════════════════════════════════════════════════════════
         public DbSet<ApiAuditLog> ApiAuditLogs { get; set; } = null!;
         public DbSet<ApiAuditLogEntityChange> ApiAuditLogEntityChanges { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Apply configurations
-            // (ako postoje Configuration klase u projektu, možete koristiti ApplyConfigurationsFromAssembly)
-            // modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-            // DODAJ: Global query filter za soft delete samo za entitete koji implementiraju ISoftDeletable
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
-                {
-                    modelBuilder.Entity(entityType.ClrType)
-                        .Property<bool>(nameof(ISoftDeletable.IsDeleted))
-                        .HasColumnName("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    var parameter = Expression.Parameter(entityType.ClrType, "e");
-                    var isDeletedProperty = Expression.Call(
-                        typeof(EF).GetMethod(nameof(EF.Property), BindingFlags.Static | BindingFlags.Public)!
-                            .MakeGenericMethod(typeof(bool)),
-                        parameter,
-                        Expression.Constant(nameof(ISoftDeletable.IsDeleted)));
-
-                    var filter = Expression.Lambda(Expression.Equal(isDeletedProperty, Expression.Constant(false)), parameter);
-
-                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
-                }
-            }
+            // NOTE: Global query filter for ISoftDeletable has been REMOVED.
+            // Soft delete is now tracked via ApiAuditLog tables, not entity properties.
+            // This prevents "Invalid column name 'IsDeleted'" SQL exceptions.
 
             // ═══════════════════════════════════════════════════════════════
-            // DOCUMENT KONFIGURACIJA
+            // DOCUMENT CONFIGURATION
+            // ═══════════════════════════════════════════════════════════════
             var documentEntity = modelBuilder.Entity<Document>();
             documentEntity.HasKey(e => e.IDDokument);
             documentEntity.ToTable("tblDokument");
 
-            // RowVersion za konkurentnost - OBAVEZNO!
+            // RowVersion for concurrency - MANDATORY!
             documentEntity.Property(e => e.DokumentTimeStamp)
                 .IsRowVersion()
                 .IsConcurrencyToken();
@@ -109,21 +85,19 @@ namespace ERPAccounting.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
 
-            modelBuilder.Entity<DocumentAdvanceVAT>()
-                .HasQueryFilter(e => !e.Document.IsDeleted);
-
             // ═══════════════════════════════════════════════════════════════
-            // DOCUMENT LINE ITEM KONFIGURACIJA - KRITIČNO ZA KONKURENTNOST
+            // DOCUMENT LINE ITEM CONFIGURATION - CRITICAL FOR CONCURRENCY
+            // ═══════════════════════════════════════════════════════════════
             var lineItemEntity = modelBuilder.Entity<DocumentLineItem>();
             lineItemEntity.HasKey(e => e.IDStavkaDokumenta);
             lineItemEntity.ToTable("tblStavkaDokumenta");
 
-            // RowVersion za konkurentnost - OBAVEZNO!
+            // RowVersion for concurrency - MANDATORY!
             lineItemEntity.Property(e => e.StavkaDokumentaTimeStamp)
                 .IsRowVersion()
                 .IsConcurrencyToken();
 
-            // Money tipovi sa tačnom preciznostišću
+            // Money types with precise scale
             lineItemEntity.Property(e => e.Kolicina)
                 .HasColumnType("money")
                 .HasPrecision(19, 4);
@@ -171,12 +145,13 @@ namespace ERPAccounting.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ═══════════════════════════════════════════════════════════════
-            // DOCUMENT COST KONFIGURACIJA
+            // DOCUMENT COST CONFIGURATION
+            // ═══════════════════════════════════════════════════════════════
             var costEntity = modelBuilder.Entity<DocumentCost>();
             costEntity.HasKey(e => e.IDDokumentTroskovi);
             costEntity.ToTable("tblDokumentTroskovi");
 
-            // RowVersion za konkurentnost
+            // RowVersion for concurrency
             costEntity.Property(e => e.DokumentTroskoviTimeStamp)
                 .IsRowVersion()
                 .IsConcurrencyToken();
@@ -201,17 +176,18 @@ namespace ERPAccounting.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ═══════════════════════════════════════════════════════════════
-            // DOCUMENT COST LINE ITEM KONFIGURACIJA - KRITIČNO ZA KONKURENTNOST
+            // DOCUMENT COST LINE ITEM CONFIGURATION - CRITICAL FOR CONCURRENCY
+            // ═══════════════════════════════════════════════════════════════
             var costLineItemEntity = modelBuilder.Entity<DocumentCostLineItem>();
             costLineItemEntity.HasKey(e => e.IDDokumentTroskoviStavka);
             costLineItemEntity.ToTable("tblDokumentTroskoviStavka");
 
-            // RowVersion za konkurentnost - OBAVEZNO!
+            // RowVersion for concurrency - MANDATORY!
             costLineItemEntity.Property(e => e.DokumentTroskoviStavkaTimeStamp)
                 .IsRowVersion()
                 .IsConcurrencyToken();
 
-            // Money tipovi
+            // Money types
             costLineItemEntity.Property(e => e.Iznos)
                 .HasColumnType("money")
                 .HasPrecision(19, 4);
@@ -233,7 +209,8 @@ namespace ERPAccounting.Infrastructure.Data
                 .IsRequired(false);
 
             // ═══════════════════════════════════════════════════════════════
-            // DEPENDENT COST LINE ITEM KONFIGURACIJA
+            // DEPENDENT COST LINE ITEM CONFIGURATION
+            // ═══════════════════════════════════════════════════════════════
             var dependentCostLineItemEntity = modelBuilder.Entity<DependentCostLineItem>();
 
             dependentCostLineItemEntity.Property(e => e.Amount)
@@ -241,7 +218,8 @@ namespace ERPAccounting.Infrastructure.Data
                 .HasPrecision(19, 4);
 
             // ═══════════════════════════════════════════════════════════════
-            // API AUDIT LOG KONFIGURACIJA
+            // API AUDIT LOG CONFIGURATION
+            // ═══════════════════════════════════════════════════════════════
             var auditLogEntity = modelBuilder.Entity<ApiAuditLog>();
             auditLogEntity.HasKey(e => e.IDAuditLog);
             auditLogEntity.ToTable("tblAPIAuditLog");
@@ -272,7 +250,7 @@ namespace ERPAccounting.Infrastructure.Data
                 .HasForeignKey(e => e.IDAuditLog)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // API AUDIT LOG ENTITY CHANGE KONFIGURACIJA
+            // API AUDIT LOG ENTITY CHANGE CONFIGURATION
             var auditChangeEntity = modelBuilder.Entity<ApiAuditLogEntityChange>();
             auditChangeEntity.HasKey(e => e.IDEntityChange);
             auditChangeEntity.ToTable("tblAPIAuditLogEntityChanges");

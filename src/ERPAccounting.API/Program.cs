@@ -1,3 +1,4 @@
+using ERPAccounting.API.Filters;
 using ERPAccounting.Application.Extensions;
 using ERPAccounting.Common.Interfaces;
 using ERPAccounting.Infrastructure.Middleware;
@@ -38,8 +39,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Add services to the container
-builder.Services.AddControllers();
+// Add services to the container with global filters
+builder.Services.AddControllers(options =>
+{
+    // ETag filter - automatski setuje ETag header na svaki response
+    options.Filters.Add<ETagFilter>();
+    
+    // Concurrency exception filter - standardizovani 409 Conflict response
+    options.Filters.Add<ConcurrencyExceptionFilter>();
+});
+
 builder.Services.AddEndpointsApiExplorer();
 
 // IMPORTANT: register infrastructure (DbContext, repositories, UoW...) BEFORE application services
@@ -61,7 +70,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "ERP Accounting API",
         Version = "v1",
-        Description = "Enterprise Resource Planning - Accounting Module API"
+        Description = "Enterprise Resource Planning - Accounting Module API with ETag Concurrency Control"
     });
 
     // Dodaj definiciju za Bearer token

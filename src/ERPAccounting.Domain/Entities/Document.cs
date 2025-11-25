@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ERPAccounting.Domain.Interfaces;
 
 namespace ERPAccounting.Domain.Entities;
 
+/// <summary>
+/// Document entity - maps to tblDokument table.
+/// Represents the main document header (invoice, order, etc.)
+/// </summary>
 [Table("tblDokument")]
-public class Document : BaseEntity, ISoftDeletable
+public class Document
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -227,7 +230,11 @@ public class Document : BaseEntity, ISoftDeletable
     [Column("PozivNaBroj1"), StringLength(50)]
     public string? PozivNaBroj1 { get; set; }
     
-    /// <summary>CRITICAL: RowVersion for ETag concurrency</summary>
+    /// <summary>
+    /// CRITICAL: RowVersion for ETag concurrency control.
+    /// This timestamp is automatically updated by SQL Server on every UPDATE.
+    /// Used for optimistic concurrency detection.
+    /// </summary>
     [Timestamp, Column("DokumentTimeStamp")]
     public byte[] DokumentTimeStamp { get; set; } = Array.Empty<byte>();
     
@@ -269,8 +276,6 @@ public class Document : BaseEntity, ISoftDeletable
     
     [Column("IDMerenje")]
     public int? IDMerenje { get; set; }
-
-    public bool IsDeleted { get; set; } = false;
 
     // Navigation properties
     public virtual ICollection<DocumentLineItem> LineItems { get; set; } = new List<DocumentLineItem>();

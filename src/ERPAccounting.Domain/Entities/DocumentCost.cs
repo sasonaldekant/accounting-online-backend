@@ -6,8 +6,12 @@ using System.Linq;
 
 namespace ERPAccounting.Domain.Entities;
 
+/// <summary>
+/// DocumentCost entity - maps to tblDokumentTroskovi table.
+/// Represents dependent costs associated with a document (shipping, customs, insurance, etc.)
+/// </summary>
 [Table("tblDokumentTroskovi")]
-public class DocumentCost : BaseEntity
+public class DocumentCost
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -44,13 +48,16 @@ public class DocumentCost : BaseEntity
     [Column("Kurs", TypeName = "money")]
     public decimal? Kurs { get; set; } = 0;
 
-    /// <summary>CRITICAL: RowVersion for ETag concurrency</summary>
+    /// <summary>
+    /// CRITICAL: RowVersion for ETag concurrency control.
+    /// This timestamp is automatically updated by SQL Server on every UPDATE.
+    /// Used for optimistic concurrency detection.
+    /// </summary>
     [Timestamp, Column("DokumentTroskoviTimeStamp")]
     public byte[]? DokumentTroskoviTimeStamp { get; set; }
     
-    // Navigation
+    // Navigation properties
     public virtual Document Document { get; set; } = null!;
-
     public virtual ICollection<DocumentCostLineItem> CostLineItems { get; set; } = new List<DocumentCostLineItem>();
 
     // ═══════════════════════════════════════════════════════════════
@@ -58,15 +65,15 @@ public class DocumentCost : BaseEntity
     // ═══════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Ukupan iznos bez PDV (suma svih stavki)
-    /// NOTE: This is NOT a database column - it's computed from CostLineItems
+    /// Ukupan iznos bez PDV (suma svih stavki).
+    /// NOTE: This is NOT a database column - it's computed from CostLineItems.
     /// </summary>
     [NotMapped]
     public decimal IznosBezPDV => CostLineItems?.Sum(item => item.Iznos) ?? 0;
 
     /// <summary>
-    /// Ukupan iznos PDV (suma svih PDV iz stavki)
-    /// NOTE: This is NOT a database column - it's computed from CostLineItems VAT totals
+    /// Ukupan iznos PDV (suma svih PDV iz stavki).
+    /// NOTE: This is NOT a database column - it's computed from CostLineItems VAT totals.
     /// </summary>
     [NotMapped]
     public decimal IznosPDV

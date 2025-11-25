@@ -4,6 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ERPAccounting.Domain.Entities;
 
+/// <summary>
+/// DocumentAdvanceVAT entity - maps to tblDokumentAvansPDV table.
+/// Represents VAT on advance payments.
+/// </summary>
 [Table("tblDokumentAvansPDV")]
 public class DocumentAdvanceVAT
 {
@@ -33,10 +37,13 @@ public class DocumentAdvanceVAT
     [Column("KodOslobodjenja"), StringLength(50)]
     public string? KodOslobodjenja { get; set; }
     
-    /// <summary>CRITICAL: RowVersion for ETag concurrency</summary>
+    /// <summary>
+    /// CRITICAL: RowVersion for ETag concurrency control.
+    /// This timestamp is automatically updated by SQL Server on every UPDATE.
+    /// </summary>
     [Timestamp, Column("DokumentAvansPDVTimeStamp")]
     public byte[]? DokumentAvansPDVTimeStamp { get; set; }
     
-    // Navigation
+    // Navigation property
     public virtual Document Document { get; set; } = null!;
 }
