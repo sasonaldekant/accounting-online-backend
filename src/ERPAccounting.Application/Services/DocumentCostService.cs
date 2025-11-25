@@ -48,7 +48,7 @@ public class DocumentCostService : IDocumentCostService
     public async Task<IReadOnlyList<DocumentCostDto>> GetCostsAsync(int documentId)
     {
         var costs = await _costRepository.GetByDocumentAsync(documentId);
-        return costs.Select(MapToDto).ToList();
+        return costs.Select(cost => MapToDto(cost)).ToList();
     }
 
     public async Task<DocumentCostDto?> GetCostByIdAsync(int documentId, int costId)
@@ -123,7 +123,7 @@ public class DocumentCostService : IDocumentCostService
     {
         await EnsureCostExistsAsync(documentId, costId);
         var items = await _costItemRepository.GetByCostAsync(costId);
-        return items.Select(MapToItemDto).ToList();
+        return items.Select(item => MapToItemDto(item)).ToList();
     }
 
     public async Task<DocumentCostItemDto?> GetCostItemByIdAsync(int documentId, int costId, int itemId)
