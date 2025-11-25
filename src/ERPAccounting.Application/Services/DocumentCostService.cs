@@ -226,18 +226,21 @@ public class DocumentCostService : IDocumentCostService
             return new CostDistributionResultDto(costId, 0, 0);
         }
 
+        var hasLoadedCostItems = cost.CostLineItems?.Any() == true;
+        var totalAmount = hasLoadedCostItems
+            ? cost.IznosBezPDV
+            : items.Sum(item => item.Iznos);
+
         int processed;
         decimal distributedAmount;
 
         switch (dto.DistributionMethodId)
         {
             case 1:
-                // NOTE: IznosBezPDV is computed from CostLineItems - uses loaded data
-                (processed, distributedAmount) = ApplyDistribution(cost.IznosBezPDV, items, item => item.Kolicina ?? 0);
+                (processed, distributedAmount) = ApplyDistribution(totalAmount, items, item => item.Kolicina ?? 0);
                 break;
             case 2:
-                // NOTE: IznosBezPDV is computed from CostLineItems - uses loaded data
-                (processed, distributedAmount) = ApplyDistribution(cost.IznosBezPDV, items, item => item.Iznos);
+                (processed, distributedAmount) = ApplyDistribution(totalAmount, items, item => item.Iznos);
                 break;
             case 3:
                 (processed, distributedAmount) = ApplyManualDistribution(items, dto.ManualDistribution);
