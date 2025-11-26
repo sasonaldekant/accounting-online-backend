@@ -19,7 +19,9 @@ public class DocumentCostItemRepository : IDocumentCostItemRepository
     {
         IQueryable<DocumentCostLineItem> query = _context.DocumentCostLineItems
             .Where(item => item.IDDokumentTroskovi == costId)
-            .OrderBy(item => item.IDDokumentTroskoviStavka);
+            .Include(item => item.VATItems)
+            .OrderBy(item => item.IDDokumentTroskoviStavka)
+            .AsSplitQuery();
 
         if (!track)
         {
@@ -32,7 +34,9 @@ public class DocumentCostItemRepository : IDocumentCostItemRepository
     public async Task<DocumentCostLineItem?> GetAsync(int costId, int itemId, bool track = false, CancellationToken cancellationToken = default)
     {
         IQueryable<DocumentCostLineItem> query = _context.DocumentCostLineItems
-            .Where(item => item.IDDokumentTroskoviStavka == itemId && item.IDDokumentTroskovi == costId);
+            .Where(item => item.IDDokumentTroskoviStavka == itemId && item.IDDokumentTroskovi == costId)
+            .Include(item => item.VATItems)
+            .AsSplitQuery();
 
         if (!track)
         {

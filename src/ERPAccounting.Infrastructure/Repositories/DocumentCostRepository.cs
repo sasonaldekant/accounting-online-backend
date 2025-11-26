@@ -45,6 +45,7 @@ public class DocumentCostRepository : IDocumentCostRepository
         var query = _context.DocumentCosts
             .Include(cost => cost.CostLineItems)
                 .ThenInclude(item => item.VATItems)
+            .AsSplitQuery()
             .AsQueryable();
 
         if (!track)
