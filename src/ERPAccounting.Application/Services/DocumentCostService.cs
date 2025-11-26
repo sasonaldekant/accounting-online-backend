@@ -430,8 +430,8 @@ public class DocumentCostService : IDocumentCostService
 
         var costLineItems = entity.CostLineItems?.ToList() ?? new List<DocumentCostLineItem>();
         var mappedItems = costLineItems.Select(MapToItemDto).ToList();
-        var totalNet = entity.IznosBezPDV;
-        var totalVat = entity.IznosPDV;
+        var totalNet = mappedItems.Sum(item => item.Amount);
+        var totalVat = mappedItems.Sum(item => item.TotalVat);
 
         return new DocumentCostDto(
             entity.IDDokumentTroskovi,
