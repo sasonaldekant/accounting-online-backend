@@ -153,6 +153,7 @@ DECLARE @OriginalDef NVARCHAR(MAX);
 DECLARE @NewDef NVARCHAR(MAX);
 DECLARE @Counter INT = 0;
 DECLARE @CRLF NCHAR(2) = CHAR(13) + CHAR(10);
+DECLARE @LineBreak NCHAR(1) = CHAR(10);
 DECLARE @DoubleTab NCHAR(2) = REPLICATE(CHAR(9), 2);
 
 DECLARE trigger_cursor CURSOR FOR
@@ -183,6 +184,9 @@ BEGIN
     
     -- Replace old RAISERROR syntax with new THROW syntax
     SET @NewDef = @OriginalDef;
+
+    -- Normalize line endings so replacements don't miss CRLF vs LF differences
+    SET @NewDef = REPLACE(REPLACE(@NewDef, @CRLF, @LineBreak), CHAR(13), @LineBreak);
     
     -- Pattern 1: raiserror 44447 'message'
     SET @NewDef = REPLACE(@NewDef, 
@@ -219,17 +223,17 @@ BEGIN
     -- Add state parameter (required for THROW)
     -- Find the closing quote and add , 1; if not already there
     SET @NewDef = REPLACE(@NewDef,
-        '''' + @CRLF + @DoubleTab + 'rollback tran',
-        ''', 1;' + @CRLF + @DoubleTab + '-- ROLLBACK is automatic with THROW');
+        '''' + @LineBreak + @DoubleTab + 'rollback tran',
+        ''', 1;' + @LineBreak + @DoubleTab + '-- ROLLBACK is automatic with THROW');
     SET @NewDef = REPLACE(@NewDef,
-        '''' + @CRLF + @DoubleTab + 'ROLLBACK TRAN',
-        ''', 1;' + @CRLF + @DoubleTab + '-- ROLLBACK is automatic with THROW');
+        '''' + @LineBreak + @DoubleTab + 'ROLLBACK TRAN',
+        ''', 1;' + @LineBreak + @DoubleTab + '-- ROLLBACK is automatic with THROW');
     SET @NewDef = REPLACE(@NewDef,
-        '''' + @CRLF + 'rollback tran',
-        ''', 1;' + @CRLF + '-- ROLLBACK is automatic with THROW');
+        '''' + @LineBreak + 'rollback tran',
+        ''', 1;' + @LineBreak + '-- ROLLBACK is automatic with THROW');
     SET @NewDef = REPLACE(@NewDef,
-        '''' + @CRLF + 'ROLLBACK TRAN',
-        ''', 1;' + @CRLF + '-- ROLLBACK is automatic with THROW');
+        '''' + @LineBreak + 'ROLLBACK TRAN',
+        ''', 1;' + @LineBreak + '-- ROLLBACK is automatic with THROW');
 
     -- If a THROW message ends the line without a state, append it safely per line
     DECLARE @ProcessedDef NVARCHAR(MAX) = N'';
@@ -241,7 +245,7 @@ BEGIN
 
     WHILE LEN(@Remaining) > 0
     BEGIN
-        SET @LineBreakPosition = CHARINDEX(@CRLF, @Remaining);
+        SET @LineBreakPosition = CHARINDEX(@LineBreak, @Remaining);
 
         IF @LineBreakPosition = 0
         BEGIN
@@ -251,7 +255,7 @@ BEGIN
         ELSE
         BEGIN
             SET @Line = SUBSTRING(@Remaining, 1, @LineBreakPosition - 1);
-            SET @Remaining = SUBSTRING(@Remaining, @LineBreakPosition + LEN(@CRLF), LEN(@Remaining));
+            SET @Remaining = SUBSTRING(@Remaining, @LineBreakPosition + LEN(@LineBreak), LEN(@Remaining));
         END
 
         IF @Line LIKE '%THROW [0-9][0-9][0-9][0-9][0-9], ''%' AND @Line NOT LIKE '%THROW%''%, [0-9]%'
@@ -270,10 +274,10 @@ BEGIN
         IF @ProcessedDef = N''
             SET @ProcessedDef = @Line;
         ELSE
-            SET @ProcessedDef = @ProcessedDef + @CRLF + @Line;
+            SET @ProcessedDef = @ProcessedDef + @LineBreak + @Line;
     END
 
-    SET @NewDef = @ProcessedDef;
+    SET @NewDef = REPLACE(@ProcessedDef, @LineBreak, @CRLF);
     
     -- Print the ALTER statement
     PRINT '-- ============================================================';
