@@ -17,12 +17,7 @@ public class DocumentCostRepository : IDocumentCostRepository
 
     public async Task<IReadOnlyList<DocumentCost>> GetByDocumentAsync(int documentId, CancellationToken cancellationToken = default)
     {
-        return await _context.DocumentCosts
-            .Include(cost => cost.CostLineItems)
-                .ThenInclude(item => item.VATItems)
-            .AsNoTracking()
-            .Include(cost => cost.CostLineItems)
-                .ThenInclude(item => item.VATItems)
+        return await BuildDetailedQuery(track: false)
             .Where(cost => cost.IDDokument == documentId)
             .OrderBy(cost => cost.IDDokumentTroskovi)
             .ToListAsync(cancellationToken);
@@ -30,17 +25,24 @@ public class DocumentCostRepository : IDocumentCostRepository
 
     public async Task<DocumentCost?> GetAsync(int documentId, int costId, bool track = false, CancellationToken cancellationToken = default)
     {
-        IQueryable<DocumentCost> query = _context.DocumentCosts
+        return await BuildDetailedQuery(track)
+            .Where(cost => cost.IDDokumentTroskovi == costId && cost.IDDokument == documentId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private IQueryable<DocumentCost> BuildDetailedQuery(bool track)
+    {
+        var query = _context.DocumentCosts
             .Include(cost => cost.CostLineItems)
                 .ThenInclude(item => item.VATItems)
-            .Where(cost => cost.IDDokumentTroskovi == costId && cost.IDDokument == documentId);
+            .AsQueryable();
 
         if (!track)
         {
             query = query.AsNoTracking();
         }
 
-        return await query.FirstOrDefaultAsync(cancellationToken);
+        return query;
     }
 
     public async Task AddAsync(DocumentCost entity, CancellationToken cancellationToken = default)
