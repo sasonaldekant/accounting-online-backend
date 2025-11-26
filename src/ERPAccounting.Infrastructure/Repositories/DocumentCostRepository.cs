@@ -17,6 +17,11 @@ public class DocumentCostRepository : IDocumentCostRepository
 
     public async Task<IReadOnlyList<DocumentCost>> GetByDocumentAsync(int documentId, CancellationToken cancellationToken = default)
     {
+        return await GetDetailedByDocumentAsync(documentId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<DocumentCost>> GetDetailedByDocumentAsync(int documentId, CancellationToken cancellationToken = default)
+    {
         return await BuildDetailedQuery(track: false)
             .Where(cost => cost.IDDokument == documentId)
             .OrderBy(cost => cost.IDDokumentTroskovi)
@@ -24,6 +29,11 @@ public class DocumentCostRepository : IDocumentCostRepository
     }
 
     public async Task<DocumentCost?> GetAsync(int documentId, int costId, bool track = false, CancellationToken cancellationToken = default)
+    {
+        return await GetDetailedAsync(documentId, costId, track, cancellationToken);
+    }
+
+    public async Task<DocumentCost?> GetDetailedAsync(int documentId, int costId, bool track = false, CancellationToken cancellationToken = default)
     {
         return await BuildDetailedQuery(track)
             .Where(cost => cost.IDDokumentTroskovi == costId && cost.IDDokument == documentId)
