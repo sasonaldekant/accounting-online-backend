@@ -434,22 +434,22 @@ public class DocumentCostService : IDocumentCostService
         var totalVat = mappedItems.Sum(item => item.TotalVat);
 
         return new DocumentCostDto(
-            entity.IDDokumentTroskovi,
-            entity.IDDokument,
-            entity.IDPartner,
-            string.Empty,
-            entity.IDVrstaDokumenta,
-            entity.BrojDokumenta,
-            entity.DatumDPO,
-            entity.DatumValute,
-            entity.Opis,
-            entity.IDStatus,
-            entity.IDValuta,
-            entity.Kurs,
-            totalNet,
-            totalVat,
-            mappedItems,
-            etag);
+            Id: entity.IDDokumentTroskovi,
+            DocumentId: entity.IDDokument,
+            PartnerId: entity.IDPartner,
+            PartnerName: string.Empty,
+            DocumentTypeCode: entity.IDVrstaDokumenta,
+            DocumentNumber: entity.BrojDokumenta,
+            DueDate: entity.DatumDPO,
+            CurrencyDate: entity.DatumValute,
+            Description: entity.Opis,
+            StatusId: entity.IDStatus,
+            CurrencyId: entity.IDValuta,
+            ExchangeRate: entity.Kurs,
+            TotalAmountNet: totalNet,
+            TotalAmountVat: totalVat,
+            Items: mappedItems,
+            ETag: etag);
     }
 
     private static DocumentCostItemDto MapToItemDto(DocumentCostLineItem entity)
@@ -470,24 +470,24 @@ public class DocumentCostService : IDocumentCostService
         var totalVat = vatItems.Sum(v => v.VatAmount);
 
         return new DocumentCostItemDto(
-            entity.IDDokumentTroskoviStavka,
-            entity.IDDokumentTroskovi,
-            entity.IDUlazniRacuniIzvedeni,
-            string.Empty,
-            entity.IDNacinDeljenjaTroskova,
-            string.Empty,
-            entity.Iznos,
-            entity.SveStavke,
-            entity.IDStatus,
-            entity.ObracunPorezTroskovi == 1,
-            entity.DodajPDVNaTroskove == 1,
-            entity.IznosValuta,
-            entity.Gotovina,
-            entity.Kartica,
-            entity.Virman,
-            entity.Kolicina,
-            totalVat,
-            vatItems,
-            etag);
+            Id: entity.IDDokumentTroskoviStavka,
+            DocumentCostId: entity.IDDokumentTroskovi,
+            CostTypeId: entity.IDUlazniRacuniIzvedeni,
+            CostTypeName: string.Empty,
+            DistributionMethodId: entity.IDNacinDeljenjaTroskova,
+            DistributionMethodName: string.Empty,
+            Amount: entity.Iznos,
+            ApplyToAllItems: entity.SveStavke,
+            StatusId: entity.IDStatus,
+            CalculateTaxOnCost: entity.ObracunPorezTroskovi == 1,
+            AddVatToCost: entity.DodajPDVNaTroskove == 1,
+            CurrencyAmount: entity.IznosValuta,
+            CashAmount: entity.Gotovina,
+            CardAmount: entity.Kartica,
+            WireTransferAmount: entity.Virman,
+            Quantity: entity.Kolicina,
+            TotalVat: totalVat,
+            VatItems: vatItems,
+            ETag: etag);
     }
 }
