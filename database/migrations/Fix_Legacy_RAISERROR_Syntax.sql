@@ -253,7 +253,7 @@ BEGIN
         END
         ELSE
         BEGIN
-            IF @Line LIKE '%THROW [0-9][0-9][0-9][0-9][0-9], ''%' AND @Line NOT LIKE '%THROW%''%, [0-9]%'
+            IF @NormalizedLine LIKE 'THROW [0-9][0-9][0-9][0-9][0-9], ''%' AND @NormalizedLine NOT LIKE 'THROW%''%, [0-9]%'
             BEGIN
                 SET @TrailingWhitespace = RIGHT(@Line, LEN(@Line) - LEN(RTRIM(@Line)));
                 SET @TrimmedLine = RTRIM(@Line);
