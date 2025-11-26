@@ -17,12 +17,10 @@ public class DocumentCostRepository : IDocumentCostRepository
 
     public async Task<IReadOnlyList<DocumentCost>> GetByDocumentAsync(int documentId, CancellationToken cancellationToken = default)
     {
-        return await GetDetailedByDocumentAsync(documentId, cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<DocumentCost>> GetDetailedByDocumentAsync(int documentId, CancellationToken cancellationToken = default)
-    {
-        return await BuildDetailedQuery(track: false)
+        return await _context.DocumentCosts
+            .Include(cost => cost.CostLineItems)
+                .ThenInclude(item => item.VATItems)
+            .AsNoTracking()
             .Where(cost => cost.IDDokument == documentId)
             .OrderBy(cost => cost.IDDokumentTroskovi)
             .ToListAsync(cancellationToken);
@@ -30,17 +28,37 @@ public class DocumentCostRepository : IDocumentCostRepository
 
     public async Task<DocumentCost?> GetAsync(int documentId, int costId, bool track = false, CancellationToken cancellationToken = default)
     {
-        return await GetDetailedAsync(documentId, costId, track, cancellationToken);
-    }
+        if (track)
+        {
+            return await _context.DocumentCosts
+                .AsTracking()
+                .Where(cost => cost.IDDokumentTroskovi == costId && cost.IDDokument == documentId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
 
-    public async Task<DocumentCost?> GetDetailedAsync(int documentId, int costId, bool track = false, CancellationToken cancellationToken = default)
-    {
-        return await BuildDetailedQuery(track)
+        IQueryable<DocumentCost> query = _context.DocumentCosts;
+
+        // Avoid loading child collections on tracked queries to prevent marking the full graph as modified
+        // when only the header needs updating.
+        if (includeChildren && !track)
+        {
+            query = query
+                .Include(cost => cost.CostLineItems)
+                    .ThenInclude(item => item.VATItems)
+                .AsNoTracking();
+        }
+
+        return await query
+            .AsNoTracking()
             .Where(cost => cost.IDDokumentTroskovi == costId && cost.IDDokument == documentId)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    private IQueryable<DocumentCost> BuildDetailedQuery(bool track)
+    public async Task<DocumentCost?> GetDetailedAsync(
+        int documentId,
+        int costId,
+        bool track = false,
+        CancellationToken cancellationToken = default)
     {
         var query = _context.DocumentCosts
             .Include(cost => cost.CostLineItems)
@@ -48,12 +66,18 @@ public class DocumentCostRepository : IDocumentCostRepository
             .AsSplitQuery()
             .AsQueryable();
 
-        if (!track)
+        if (track)
         {
-            query = query.AsNoTracking();
+            return await query
+                .AsTracking()
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
-        return query;
+        return await query
+            .Include(cost => cost.CostLineItems)
+                .ThenInclude(item => item.VATItems)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task AddAsync(DocumentCost entity, CancellationToken cancellationToken = default)
@@ -63,7 +87,20 @@ public class DocumentCostRepository : IDocumentCostRepository
 
     public void Update(DocumentCost entity)
     {
-        _context.DocumentCosts.Update(entity);
+        _context.DocumentCosts.Attach(entity);
+
+        // Ensure only the header is marked as modified; keep loaded cost lines/VAT items untouched.
+        _context.Entry(entity).State = EntityState.Modified;
+        foreach (var lineItem in entity.CostLineItems)
+        {
+            var lineEntry = _context.Entry(lineItem);
+            lineEntry.State = EntityState.Unchanged;
+
+            foreach (var vatItem in lineItem.VATItems)
+            {
+                _context.Entry(vatItem).State = EntityState.Unchanged;
+            }
+        }
     }
 
     public void Remove(DocumentCost entity)

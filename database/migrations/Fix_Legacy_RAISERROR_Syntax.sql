@@ -152,6 +152,9 @@ DECLARE @TableName NVARCHAR(128);
 DECLARE @OriginalDef NVARCHAR(MAX);
 DECLARE @NewDef NVARCHAR(MAX);
 DECLARE @Counter INT = 0;
+DECLARE @CRLF NCHAR(2) = CHAR(13) + CHAR(10);
+DECLARE @LineBreak NCHAR(1) = CHAR(10);
+DECLARE @DoubleTab NCHAR(2) = REPLICATE(CHAR(9), 2);
 
 DECLARE trigger_cursor CURSOR FOR
 SELECT 
@@ -181,6 +184,9 @@ BEGIN
     
     -- Replace old RAISERROR syntax with new THROW syntax
     SET @NewDef = @OriginalDef;
+
+    -- Normalize line endings so replacements don't miss CRLF vs LF differences
+    SET @NewDef = REPLACE(REPLACE(@NewDef, @CRLF, @LineBreak), CHAR(13), @LineBreak);
     
     -- Pattern 1: raiserror 44447 'message'
     SET @NewDef = REPLACE(@NewDef, 
@@ -216,17 +222,114 @@ BEGIN
     
     -- Add state parameter (required for THROW)
     -- Find the closing quote and add , 1; if not already there
-    -- This is a simple replacement - more complex regex might be needed for edge cases
-    SET @NewDef = REPLACE(@NewDef, '''\n\t\trollback tran', ''', 1;\n\t\t-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef, '''\n\t\tROLLBACK TRAN', ''', 1;\n\t\t-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef, '''\nrollback tran', ''', 1;\n-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef, '''\nROLLBACK TRAN', ''', 1;\n-- ROLLBACK is automatic with THROW');
-    
-    -- If the message doesn't end with , 1; add it
-    IF @NewDef LIKE '%THROW 50001, %' AND @NewDef NOT LIKE '%THROW 50001, %, 1;%'
+    SET @NewDef = REPLACE(@NewDef,
+        '''' + @LineBreak + @DoubleTab + 'rollback tran',
+        ''', 1;' + @LineBreak + @DoubleTab + '-- ROLLBACK is automatic with THROW');
+    SET @NewDef = REPLACE(@NewDef,
+        '''' + @LineBreak + @DoubleTab + 'ROLLBACK TRAN',
+        ''', 1;' + @LineBreak + @DoubleTab + '-- ROLLBACK is automatic with THROW');
+    SET @NewDef = REPLACE(@NewDef,
+        '''' + @LineBreak + 'rollback tran',
+        ''', 1;' + @LineBreak + '-- ROLLBACK is automatic with THROW');
+    SET @NewDef = REPLACE(@NewDef,
+        '''' + @LineBreak + 'ROLLBACK TRAN',
+        ''', 1;' + @LineBreak + '-- ROLLBACK is automatic with THROW');
+
+    -- If a THROW message ends the line without a state, append it safely per line
+    DECLARE @ProcessedDef NVARCHAR(MAX) = N'';
+    DECLARE @Remaining NVARCHAR(MAX) = @NewDef;
+    DECLARE @Line NVARCHAR(MAX);
+    DECLARE @LineBreakPosition INT;
+    DECLARE @LineBreakLength INT;
+    DECLARE @TrailingWhitespace NVARCHAR(MAX);
+    DECLARE @TrimmedLine NVARCHAR(MAX);
+    DECLARE @LeadingWhitespace NVARCHAR(MAX);
+    DECLARE @NormalizedLine NVARCHAR(MAX);
+    DECLARE @LastLineWasThrow BIT = 0;
+    DECLARE @LastThrowIndent NVARCHAR(MAX) = N'';
+
+    WHILE LEN(@Remaining) > 0
     BEGIN
-        SET @NewDef = REPLACE(@NewDef, 'THROW 50001, ''', 'THROW 50001, ''');
-        -- This is simplified - you may need manual review
+        SET @LineBreakPosition = CHARINDEX(@LineBreak, @Remaining);
+
+        IF @LineBreakPosition = 0
+        BEGIN
+            SET @Line = @Remaining;
+            SET @Remaining = N'';
+        END
+        ELSE
+        BEGIN
+            SET @Line = SUBSTRING(@Remaining, 1, @LineBreakPosition - 1);
+            SET @Remaining = SUBSTRING(@Remaining, @LineBreakPosition + LEN(@LineBreak), LEN(@Remaining));
+        END
+
+        SET @NormalizedLine = LTRIM(RTRIM(@Line));
+
+        IF @LastLineWasThrow = 1 AND (@NormalizedLine = 'rollback tran' OR @NormalizedLine = 'ROLLBACK TRAN')
+        BEGIN
+            SET @Line = @LastThrowIndent + '-- ROLLBACK is automatic with THROW';
+            SET @LastLineWasThrow = 0;
+            SET @LastThrowIndent = N'';
+        END
+        ELSE
+        BEGIN
+            IF PATINDEX('THROW [0-9][0-9][0-9][0-9][0-9], ''%''', @NormalizedLine) = 1
+               AND @NormalizedLine NOT LIKE 'THROW%''%, [0-9]%'
+            BEGIN
+                SET @TrailingWhitespace = RIGHT(@Line, LEN(@Line) - LEN(RTRIM(@Line)));
+                SET @TrimmedLine = RTRIM(@Line);
+                SET @LeadingWhitespace = LEFT(@TrimmedLine, LEN(@TrimmedLine) - LEN(LTRIM(@TrimmedLine)));
+
+                IF RIGHT(@TrimmedLine, 1) = ';'
+                    SET @TrimmedLine = LEFT(@TrimmedLine, LEN(@TrimmedLine) - 1) + ', 1;';
+                ELSE
+                    SET @TrimmedLine = @TrimmedLine + ', 1;';
+
+                SET @Line = @TrimmedLine + @TrailingWhitespace;
+                SET @LastLineWasThrow = 1;
+                SET @LastThrowIndent = @LeadingWhitespace;
+            END
+            ELSE
+            BEGIN
+                SET @LastLineWasThrow = 0;
+                SET @LastThrowIndent = N'';
+            END
+        END
+
+        IF @ProcessedDef = N''
+            SET @ProcessedDef = @Line;
+        ELSE
+            SET @ProcessedDef = @ProcessedDef + @LineBreak + @Line;
+    END
+
+    -- Normalize back to CRLF for the generated ALTER statements
+    SET @NewDef = REPLACE(@ProcessedDef, @LineBreak, @CRLF);
+
+    -- Failsafe: ensure every THROW 5000x call has a state argument even if line parsing missed it
+    DECLARE @SearchPosition INT = 1;
+    DECLARE @ThrowPosition INT;
+    DECLARE @SemicolonPosition INT;
+    DECLARE @Segment NVARCHAR(MAX);
+
+    WHILE @SearchPosition > 0 AND @SearchPosition <= LEN(@NewDef)
+    BEGIN
+        SET @ThrowPosition = PATINDEX('%THROW 5000[1-4], ''%''%', SUBSTRING(@NewDef, @SearchPosition, LEN(@NewDef)));
+
+        IF @ThrowPosition = 0
+            BREAK;
+
+        SET @ThrowPosition = @ThrowPosition + @SearchPosition - 1;
+        SET @SemicolonPosition = CHARINDEX(';', @NewDef, @ThrowPosition);
+
+        IF @SemicolonPosition = 0
+            BREAK;
+
+        SET @Segment = SUBSTRING(@NewDef, @ThrowPosition, @SemicolonPosition - @ThrowPosition + 1);
+
+        IF @Segment NOT LIKE '%'', [0-9]%'
+            SET @NewDef = STUFF(@NewDef, @SemicolonPosition, 1, ', 1;');
+
+        SET @SearchPosition = @ThrowPosition + 1;
     END
     
     -- Print the ALTER statement
