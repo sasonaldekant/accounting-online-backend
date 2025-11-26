@@ -152,6 +152,8 @@ DECLARE @TableName NVARCHAR(128);
 DECLARE @OriginalDef NVARCHAR(MAX);
 DECLARE @NewDef NVARCHAR(MAX);
 DECLARE @Counter INT = 0;
+DECLARE @CRLF NCHAR(2) = CHAR(13) + CHAR(10);
+DECLARE @DoubleTab NCHAR(2) = REPLICATE(CHAR(9), 2);
 
 DECLARE trigger_cursor CURSOR FOR
 SELECT 
@@ -216,18 +218,22 @@ BEGIN
     
     -- Add state parameter (required for THROW)
     -- Find the closing quote and add , 1; if not already there
-    -- This is a simple replacement - more complex regex might be needed for edge cases
-    SET @NewDef = REPLACE(@NewDef, '''\n\t\trollback tran', ''', 1;\n\t\t-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef, '''\n\t\tROLLBACK TRAN', ''', 1;\n\t\t-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef, '''\nrollback tran', ''', 1;\n-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef, '''\nROLLBACK TRAN', ''', 1;\n-- ROLLBACK is automatic with THROW');
-    
-    -- If the message doesn't end with , 1; add it
-    IF @NewDef LIKE '%THROW 50001, %' AND @NewDef NOT LIKE '%THROW 50001, %, 1;%'
-    BEGIN
-        SET @NewDef = REPLACE(@NewDef, 'THROW 50001, ''', 'THROW 50001, ''');
-        -- This is simplified - you may need manual review
-    END
+    SET @NewDef = REPLACE(@NewDef,
+        '''' + @CRLF + @DoubleTab + 'rollback tran',
+        ''', 1;' + @CRLF + @DoubleTab + '-- ROLLBACK is automatic with THROW');
+    SET @NewDef = REPLACE(@NewDef,
+        '''' + @CRLF + @DoubleTab + 'ROLLBACK TRAN',
+        ''', 1;' + @CRLF + @DoubleTab + '-- ROLLBACK is automatic with THROW');
+    SET @NewDef = REPLACE(@NewDef,
+        '''' + @CRLF + 'rollback tran',
+        ''', 1;' + @CRLF + '-- ROLLBACK is automatic with THROW');
+    SET @NewDef = REPLACE(@NewDef,
+        '''' + @CRLF + 'ROLLBACK TRAN',
+        ''', 1;' + @CRLF + '-- ROLLBACK is automatic with THROW');
+
+    -- If THROW is followed by a newline without the state, append it
+    SET @NewDef = REPLACE(@NewDef, '''' + @CRLF + @DoubleTab, ''', 1;' + @CRLF + @DoubleTab);
+    SET @NewDef = REPLACE(@NewDef, '''' + @CRLF, ''', 1;' + @CRLF);
     
     -- Print the ALTER statement
     PRINT '-- ============================================================';
