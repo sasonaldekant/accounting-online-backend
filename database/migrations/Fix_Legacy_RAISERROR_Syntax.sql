@@ -153,6 +153,7 @@ DECLARE @OriginalDef NVARCHAR(MAX);
 DECLARE @NewDef NVARCHAR(MAX);
 DECLARE @Counter INT = 0;
 DECLARE @CRLF NCHAR(2) = CHAR(13) + CHAR(10);
+DECLARE @LF NCHAR(1) = CHAR(10);
 
 DECLARE trigger_cursor CURSOR FOR
 SELECT 
@@ -220,6 +221,7 @@ BEGIN
     DECLARE @Remaining NVARCHAR(MAX) = @NewDef;
     DECLARE @Line NVARCHAR(MAX);
     DECLARE @LineBreakPosition INT;
+    DECLARE @LineBreakLength INT;
     DECLARE @TrailingWhitespace NVARCHAR(MAX);
     DECLARE @TrimmedLine NVARCHAR(MAX);
     DECLARE @LeadingWhitespace NVARCHAR(MAX);
@@ -229,7 +231,24 @@ BEGIN
 
     WHILE LEN(@Remaining) > 0
     BEGIN
-        SET @LineBreakPosition = CHARINDEX(@CRLF, @Remaining);
+        DECLARE @NextCrlf INT = CHARINDEX(@CRLF, @Remaining);
+        DECLARE @NextLf INT = CHARINDEX(@LF, @Remaining);
+
+        IF @NextCrlf > 0 AND (@NextLf = 0 OR @NextCrlf < @NextLf)
+        BEGIN
+            SET @LineBreakPosition = @NextCrlf;
+            SET @LineBreakLength = LEN(@CRLF);
+        END
+        ELSE IF @NextLf > 0
+        BEGIN
+            SET @LineBreakPosition = @NextLf;
+            SET @LineBreakLength = LEN(@LF);
+        END
+        ELSE
+        BEGIN
+            SET @LineBreakPosition = 0;
+            SET @LineBreakLength = 0;
+        END
 
         IF @LineBreakPosition = 0
         BEGIN
@@ -239,7 +258,7 @@ BEGIN
         ELSE
         BEGIN
             SET @Line = SUBSTRING(@Remaining, 1, @LineBreakPosition - 1);
-            SET @Remaining = SUBSTRING(@Remaining, @LineBreakPosition + LEN(@CRLF), LEN(@Remaining));
+            SET @Remaining = SUBSTRING(@Remaining, @LineBreakPosition + @LineBreakLength, LEN(@Remaining));
         END
 
         SET @NormalizedLine = LTRIM(RTRIM(@Line));
