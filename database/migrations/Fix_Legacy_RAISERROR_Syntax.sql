@@ -277,7 +277,35 @@ BEGIN
             SET @ProcessedDef = @ProcessedDef + @LineBreak + @Line;
     END
 
+    -- Normalize back to CRLF for the generated ALTER statements
     SET @NewDef = REPLACE(@ProcessedDef, @LineBreak, @CRLF);
+
+    -- Failsafe: ensure every THROW 5000x call has a state argument even if line parsing missed it
+    DECLARE @SearchPosition INT = 1;
+    DECLARE @ThrowPosition INT;
+    DECLARE @SemicolonPosition INT;
+    DECLARE @Segment NVARCHAR(MAX);
+
+    WHILE @SearchPosition > 0 AND @SearchPosition <= LEN(@NewDef)
+    BEGIN
+        SET @ThrowPosition = PATINDEX('%THROW 5000[1-4], ''%''%', SUBSTRING(@NewDef, @SearchPosition, LEN(@NewDef)));
+
+        IF @ThrowPosition = 0
+            BREAK;
+
+        SET @ThrowPosition = @ThrowPosition + @SearchPosition - 1;
+        SET @SemicolonPosition = CHARINDEX(';', @NewDef, @ThrowPosition);
+
+        IF @SemicolonPosition = 0
+            BREAK;
+
+        SET @Segment = SUBSTRING(@NewDef, @ThrowPosition, @SemicolonPosition - @ThrowPosition + 1);
+
+        IF @Segment NOT LIKE '%'', [0-9]%'
+            SET @NewDef = STUFF(@NewDef, @SemicolonPosition, 1, ', 1;');
+
+        SET @SearchPosition = @ThrowPosition + 1;
+    END
     
     -- Print the ALTER statement
     PRINT '-- ============================================================';
