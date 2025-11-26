@@ -216,21 +216,6 @@ BEGIN
         'RAISERROR 44449 ''', 
         'THROW 50004, ''');
     
-    -- Add state parameter (required for THROW)
-    -- Find the closing quote and add , 1; if not already there
-    SET @NewDef = REPLACE(@NewDef,
-        '''' + @CRLF + @DoubleTab + 'rollback tran',
-        ''', 1;' + @CRLF + @DoubleTab + '-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef,
-        '''' + @CRLF + @DoubleTab + 'ROLLBACK TRAN',
-        ''', 1;' + @CRLF + @DoubleTab + '-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef,
-        '''' + @CRLF + 'rollback tran',
-        ''', 1;' + @CRLF + '-- ROLLBACK is automatic with THROW');
-    SET @NewDef = REPLACE(@NewDef,
-        '''' + @CRLF + 'ROLLBACK TRAN',
-        ''', 1;' + @CRLF + '-- ROLLBACK is automatic with THROW');
-
     -- If a THROW message ends the line without a state, append it safely per line
     DECLARE @ProcessedDef NVARCHAR(MAX) = N'';
     DECLARE @Remaining NVARCHAR(MAX) = @NewDef;
@@ -238,6 +223,10 @@ BEGIN
     DECLARE @LineBreakPosition INT;
     DECLARE @TrailingWhitespace NVARCHAR(MAX);
     DECLARE @TrimmedLine NVARCHAR(MAX);
+    DECLARE @LeadingWhitespace NVARCHAR(MAX);
+    DECLARE @NormalizedLine NVARCHAR(MAX);
+    DECLARE @LastLineWasThrow BIT = 0;
+    DECLARE @LastThrowIndent NVARCHAR(MAX) = N'';
 
     WHILE LEN(@Remaining) > 0
     BEGIN
@@ -254,17 +243,36 @@ BEGIN
             SET @Remaining = SUBSTRING(@Remaining, @LineBreakPosition + LEN(@CRLF), LEN(@Remaining));
         END
 
-        IF @Line LIKE '%THROW [0-9][0-9][0-9][0-9][0-9], ''%' AND @Line NOT LIKE '%THROW%''%, [0-9]%'
+        SET @NormalizedLine = LTRIM(RTRIM(@Line));
+
+        IF @LastLineWasThrow = 1 AND (@NormalizedLine = 'rollback tran' OR @NormalizedLine = 'ROLLBACK TRAN')
         BEGIN
-            SET @TrailingWhitespace = RIGHT(@Line, LEN(@Line) - LEN(RTRIM(@Line)));
-            SET @TrimmedLine = RTRIM(@Line);
+            SET @Line = @LastThrowIndent + '-- ROLLBACK is automatic with THROW';
+            SET @LastLineWasThrow = 0;
+            SET @LastThrowIndent = N'';
+        END
+        ELSE
+        BEGIN
+            IF @Line LIKE '%THROW [0-9][0-9][0-9][0-9][0-9], ''%' AND @Line NOT LIKE '%THROW%''%, [0-9]%'
+            BEGIN
+                SET @TrailingWhitespace = RIGHT(@Line, LEN(@Line) - LEN(RTRIM(@Line)));
+                SET @TrimmedLine = RTRIM(@Line);
+                SET @LeadingWhitespace = LEFT(@TrimmedLine, LEN(@TrimmedLine) - LEN(LTRIM(@TrimmedLine)));
 
-            IF RIGHT(@TrimmedLine, 1) = ';'
-                SET @TrimmedLine = LEFT(@TrimmedLine, LEN(@TrimmedLine) - 1) + ', 1;';
+                IF RIGHT(@TrimmedLine, 1) = ';'
+                    SET @TrimmedLine = LEFT(@TrimmedLine, LEN(@TrimmedLine) - 1) + ', 1;';
+                ELSE
+                    SET @TrimmedLine = @TrimmedLine + ', 1;';
+
+                SET @Line = @TrimmedLine + @TrailingWhitespace;
+                SET @LastLineWasThrow = 1;
+                SET @LastThrowIndent = @LeadingWhitespace;
+            END
             ELSE
-                SET @TrimmedLine = @TrimmedLine + ', 1;';
-
-            SET @Line = @TrimmedLine + @TrailingWhitespace;
+            BEGIN
+                SET @LastLineWasThrow = 0;
+                SET @LastThrowIndent = N'';
+            END
         END
 
         IF @ProcessedDef = N''
