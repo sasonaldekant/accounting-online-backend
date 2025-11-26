@@ -428,9 +428,10 @@ public class DocumentCostService : IDocumentCostService
             ? string.Empty
             : Convert.ToBase64String(entity.DokumentTroskoviTimeStamp);
 
-        var items = entity.CostLineItems?.ToList() ?? new List<DocumentCostLineItem>();
-        var totalNet = items.Sum(item => item.Iznos);
-        var totalVat = items.Sum(item => item.VATItems?.Sum(v => v.IznosPDV) ?? 0);
+        var costLineItems = entity.CostLineItems?.ToList() ?? new List<DocumentCostLineItem>();
+        var mappedItems = costLineItems.Select(MapToItemDto).ToList();
+        var totalNet = entity.IznosBezPDV;
+        var totalVat = entity.IznosPDV;
 
         return new DocumentCostDto(
             entity.IDDokumentTroskovi,
@@ -447,7 +448,7 @@ public class DocumentCostService : IDocumentCostService
             entity.Kurs,
             totalNet,
             totalVat,
-            items.Select(MapToItemDto).ToList(),
+            mappedItems,
             etag);
     }
 
@@ -457,12 +458,14 @@ public class DocumentCostService : IDocumentCostService
             ? string.Empty
             : Convert.ToBase64String(entity.DokumentTroskoviStavkaTimeStamp);
 
-        var vatItems = entity.VATItems?.Select(v => new CostItemVatResponseDto(
-            v.IDDokumentTroskoviStavkaPDV,
-            v.IDPoreskaStopa,
-            string.Empty,
-            0,
-            v.IznosPDV)).ToList() ?? new List<CostItemVatResponseDto>();
+        var vatItems = (entity.VATItems ?? new List<DocumentCostVAT>())
+            .Select(v => new CostItemVatResponseDto(
+                v.IDDokumentTroskoviStavkaPDV,
+                v.IDPoreskaStopa,
+                string.Empty,
+                0,
+                v.IznosPDV))
+            .ToList();
 
         var totalVat = vatItems.Sum(v => v.VatAmount);
 
