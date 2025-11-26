@@ -59,12 +59,21 @@ public class ConcurrencyExceptionFilter : IExceptionFilter
 
         var problemDetails = ProblemDetailsDto.FromException(
             exception,
-            context.HttpContext.Request.Path)
+            context.HttpContext.Request.Path,
+            context.HttpContext.TraceIdentifier)
             with
             {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8",
                 Errors = new Dictionary<string, string[]>
                 {
                     ["concurrency"] = concurrencyErrors.ToArray()
+                },
+                Extensions = new Dictionary<string, object?>
+                {
+                    ["resourceType"] = exception.ResourceType,
+                    ["resourceId"] = exception.ResourceId,
+                    ["expectedETag"] = exception.ExpectedETag,
+                    ["currentETag"] = exception.CurrentETag
                 }
             };
 
@@ -102,7 +111,9 @@ public class ConcurrencyExceptionFilter : IExceptionFilter
                     "The record may have been modified or deleted by another user.",
                     "Please refresh the entity and try again."
                 }
-            });
+            },
+            type: "https://tools.ietf.org/html/rfc7231#section-6.5.8",
+            traceId: context.HttpContext.TraceIdentifier);
 
         context.Result = new ObjectResult(problemDetails)
         {

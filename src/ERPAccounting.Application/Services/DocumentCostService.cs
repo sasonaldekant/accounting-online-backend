@@ -48,7 +48,7 @@ public class DocumentCostService : IDocumentCostService
     public async Task<IReadOnlyList<DocumentCostDto>> GetCostsAsync(int documentId)
     {
         var costs = await _costRepository.GetByDocumentAsync(documentId);
-        return costs.Select(MapToDto).ToList();
+        return costs.Select(cost => MapToDto(cost)).ToList();
     }
 
     public async Task<DocumentCostDto?> GetCostByIdAsync(int documentId, int costId)
@@ -81,7 +81,7 @@ public class DocumentCostService : IDocumentCostService
         await _costRepository.AddAsync(entity);
         await _unitOfWork.SaveChangesAsync();
 
-        return MapToDto(entity);
+        return MapToDto(entity, dto.AmountNet, dto.AmountVat);
     }
 
     public async Task<DocumentCostDto> UpdateCostAsync(int documentId, int costId, byte[] expectedRowVersion, UpdateDocumentCostDto dto)
@@ -124,7 +124,7 @@ public class DocumentCostService : IDocumentCostService
     {
         await EnsureCostExistsAsync(documentId, costId);
         var items = await _costItemRepository.GetByCostAsync(costId);
-        return items.Select(MapToItemDto).ToList();
+        return items.Select(item => MapToItemDto(item)).ToList();
     }
 
     public async Task<DocumentCostItemDto?> GetCostItemByIdAsync(int documentId, int costId, int itemId)
@@ -226,18 +226,21 @@ public class DocumentCostService : IDocumentCostService
             return new CostDistributionResultDto(costId, 0, 0);
         }
 
+        var hasLoadedCostItems = cost.CostLineItems?.Any() == true;
+        var totalAmount = hasLoadedCostItems
+            ? cost.IznosBezPDV
+            : items.Sum(item => item.Iznos);
+
         int processed;
         decimal distributedAmount;
 
         switch (dto.DistributionMethodId)
         {
             case 1:
-                // NOTE: IznosBezPDV is computed from CostLineItems - uses loaded data
-                (processed, distributedAmount) = ApplyDistribution(cost.IznosBezPDV, items, item => item.Kolicina ?? 0);
+                (processed, distributedAmount) = ApplyDistribution(totalAmount, items, item => item.Kolicina ?? 0);
                 break;
             case 2:
-                // NOTE: IznosBezPDV is computed from CostLineItems - uses loaded data
-                (processed, distributedAmount) = ApplyDistribution(cost.IznosBezPDV, items, item => item.Iznos);
+                (processed, distributedAmount) = ApplyDistribution(totalAmount, items, item => item.Iznos);
                 break;
             case 3:
                 (processed, distributedAmount) = ApplyManualDistribution(items, dto.ManualDistribution);
@@ -370,11 +373,14 @@ public class DocumentCostService : IDocumentCostService
         }
     }
 
-    private static DocumentCostDto MapToDto(DocumentCost entity)
+    private static DocumentCostDto MapToDto(DocumentCost entity, decimal? amountNetOverride = null, decimal? amountVatOverride = null)
     {
         var etag = entity.DokumentTroskoviTimeStamp is null
             ? string.Empty
             : Convert.ToBase64String(entity.DokumentTroskoviTimeStamp);
+
+        var amountNet = amountNetOverride ?? entity.IznosBezPDV;
+        var amountVat = amountVatOverride ?? entity.IznosPDV;
 
         // NOTE: IznosBezPDV and IznosPDV are computed properties from CostLineItems
         return new DocumentCostDto(
@@ -382,8 +388,8 @@ public class DocumentCostService : IDocumentCostService
             entity.IDDokument,
             entity.IDPartner,
             entity.IDVrstaDokumenta,
-            entity.IznosBezPDV,  // Computed from CostLineItems.Sum(x => x.Iznos)
-            entity.IznosPDV,     // Computed from CostLineItems.Sum(x => x.VATItems.Sum(v => v.IznosPDV))
+            amountNet,  // Computed from CostLineItems.Sum(x => x.Iznos) or provided override
+            amountVat,  // Computed from CostLineItems.Sum(x => x.VATItems.Sum(v => v.IznosPDV)) or provided override
             entity.DatumValute ?? entity.DatumDPO,
             entity.Opis,
             etag);

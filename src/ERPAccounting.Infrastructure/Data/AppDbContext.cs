@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ERPAccounting.Domain.Entities;
 using ERPAccounting.Common.Interfaces;
-using ERPAccounting.Infrastructure.Persistence.Interceptors;
 
 namespace ERPAccounting.Infrastructure.Data
 {
@@ -13,6 +12,16 @@ namespace ERPAccounting.Infrastructure.Data
     /// Entity Framework Core DbContext for ERP Accounting system.
     /// Maps all tables and configures relationships.
     /// Database-First approach - entities map to existing tables.
+    /// 
+    /// AUDIT SYSTEM:
+    /// - Entity-level audit (CreatedAt, UpdatedAt, IsDeleted) is NOT used
+    /// - All auditing is done via ApiAuditLog + ApiAuditLogEntityChanges tables
+    /// - See ApiAuditMiddleware for automatic API request/response logging
+    /// 
+    /// TRIGGER COMPATIBILITY:
+    /// - All transactional tables have database triggers for auditing/history
+    /// - HasTrigger() is configured to prevent OUTPUT clause usage
+    /// - This ensures compatibility with SQL Server triggers on INSERT operations
     /// </summary>
     public class AppDbContext : DbContext
     {
@@ -25,13 +34,11 @@ namespace ERPAccounting.Infrastructure.Data
             _currentUserService = currentUserService;
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            // Register AuditInterceptor for automatic audit logging
-            optionsBuilder.AddInterceptors(new AuditInterceptor(_currentUserService));
-            
-            base.OnConfiguring(optionsBuilder);
-        }
+        // NOTE: Legacy AuditInterceptor has been removed
+        // Audit is now handled by:
+        // 1. ApiAuditMiddleware - logs all API requests/responses to tblAPIAuditLog
+        // 2. AuditLogService - tracks entity changes to tblAPIAuditLogEntityChanges
+        // This provides complete audit trail without modifying entity schemas
 
         // ═══════════════════════════════════════════════════════════════
         // MAIN TABLES
@@ -61,7 +68,11 @@ namespace ERPAccounting.Infrastructure.Data
             // ═══════════════════════════════════════════════════════════════
             var documentEntity = modelBuilder.Entity<Document>();
             documentEntity.HasKey(e => e.IDDokument);
-            documentEntity.ToTable("tblDokument");
+            
+            // CRITICAL: Configure trigger to prevent OUTPUT clause usage
+            // SQL Server triggers are incompatible with OUTPUT clause in INSERT statements
+            // See: https://aka.ms/efcore-docs-sqlserver-save-changes-and-output-clause
+            documentEntity.ToTable("tblDokument", t => t.HasTrigger("TR_tblDokument_Insert"));
 
             // RowVersion for concurrency - MANDATORY!
             documentEntity.Property(e => e.DokumentTimeStamp)
@@ -90,7 +101,9 @@ namespace ERPAccounting.Infrastructure.Data
             // ═══════════════════════════════════════════════════════════════
             var lineItemEntity = modelBuilder.Entity<DocumentLineItem>();
             lineItemEntity.HasKey(e => e.IDStavkaDokumenta);
-            lineItemEntity.ToTable("tblStavkaDokumenta");
+            
+            // CRITICAL: Configure trigger to prevent OUTPUT clause usage
+            lineItemEntity.ToTable("tblStavkaDokumenta", t => t.HasTrigger("TR_tblStavkaDokumenta_Insert"));
 
             // RowVersion for concurrency - MANDATORY!
             lineItemEntity.Property(e => e.StavkaDokumentaTimeStamp)
@@ -149,7 +162,9 @@ namespace ERPAccounting.Infrastructure.Data
             // ═══════════════════════════════════════════════════════════════
             var costEntity = modelBuilder.Entity<DocumentCost>();
             costEntity.HasKey(e => e.IDDokumentTroskovi);
-            costEntity.ToTable("tblDokumentTroskovi");
+            
+            // CRITICAL: Configure trigger to prevent OUTPUT clause usage
+            costEntity.ToTable("tblDokumentTroskovi", t => t.HasTrigger("TR_tblDokumentTroskovi_Insert"));
 
             // RowVersion for concurrency
             costEntity.Property(e => e.DokumentTroskoviTimeStamp)
@@ -180,7 +195,9 @@ namespace ERPAccounting.Infrastructure.Data
             // ═══════════════════════════════════════════════════════════════
             var costLineItemEntity = modelBuilder.Entity<DocumentCostLineItem>();
             costLineItemEntity.HasKey(e => e.IDDokumentTroskoviStavka);
-            costLineItemEntity.ToTable("tblDokumentTroskoviStavka");
+            
+            // CRITICAL: Configure trigger to prevent OUTPUT clause usage
+            costLineItemEntity.ToTable("tblDokumentTroskoviStavka", t => t.HasTrigger("TR_tblDokumentTroskoviStavka_Insert"));
 
             // RowVersion for concurrency - MANDATORY!
             costLineItemEntity.Property(e => e.DokumentTroskoviStavkaTimeStamp)
@@ -207,6 +224,24 @@ namespace ERPAccounting.Infrastructure.Data
                 .HasForeignKey(e => e.IDDokumentTroskoviStavka)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
+
+            // ═══════════════════════════════════════════════════════════════
+            // DOCUMENT COST VAT CONFIGURATION
+            // ═══════════════════════════════════════════════════════════════
+            var costVATEntity = modelBuilder.Entity<DocumentCostVAT>();
+            costVATEntity.HasKey(e => e.IDDokumentTroskoviStavkaPDV);
+            
+            // CRITICAL: Configure trigger to prevent OUTPUT clause usage
+            costVATEntity.ToTable("tblDokumentTroskoviStavkaPDV", t => t.HasTrigger("TR_tblDokumentTroskoviStavkaPDV_Insert"));
+
+            // ═══════════════════════════════════════════════════════════════
+            // DOCUMENT ADVANCE VAT CONFIGURATION
+            // ═══════════════════════════════════════════════════════════════
+            var advanceVATEntity = modelBuilder.Entity<DocumentAdvanceVAT>();
+            advanceVATEntity.HasKey(e => e.DokumentAvansPDV);
+            
+            // CRITICAL: Configure trigger to prevent OUTPUT clause usage
+            advanceVATEntity.ToTable("tblDokumentAvansPDV", t => t.HasTrigger("TR_tblDokumentAvansPDV_Insert"));
 
             // ═══════════════════════════════════════════════════════════════
             // DEPENDENT COST LINE ITEM CONFIGURATION

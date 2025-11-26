@@ -9,4 +9,5 @@
   <ItemGroup>
     <ProjectReference Include="..\ERPAccounting.Domain\ERPAccounting.Domain.csproj" />
   </ItemGroup>
+
 </Project>

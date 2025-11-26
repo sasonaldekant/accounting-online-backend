@@ -3,7 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ERPAccounting.Domain\ERPAccounting.Domain.csproj" />
     <ProjectReference Include="..\ERPAccounting.Common\ERPAccounting.Common.csproj" />
-    <ProjectReference Include="..\ERPAccounting.Application\ERPAccounting.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
