@@ -9,10 +9,16 @@ namespace ERPAccounting.Common.Interfaces
     public interface IAuditLogService
     {
         /// <summary>
-        /// Loguje kompletan API request/response.
+        /// Kreira novi audit log zapis (pre izvršavanja requesta).
         /// </summary>
-        /// <param name="auditLog">Audit log objekat sa svim podacima</param>
+        /// <param name="auditLog">Audit log objekat sa request podacima</param>
         Task LogAsync(ApiAuditLog auditLog);
+
+        /// <summary>
+        /// Ažurira postojeći audit log sa response podacima (posle izvršavanja requesta).
+        /// </summary>
+        /// <param name="auditLog">Audit log sa ažuriranim response podacima</param>
+        Task UpdateAsync(ApiAuditLog auditLog);
 
         /// <summary>
         /// Loguje field-level izmene entiteta.
