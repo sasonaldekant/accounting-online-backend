@@ -74,6 +74,7 @@ namespace ERPAccounting.Infrastructure.Services
 
         /// <summary>
         /// Ažurira postojeći audit log sa response podacima.
+        /// ISPRAVKA: Eksplicitno označi ResponseBody kao Modified.
         /// </summary>
         public async Task UpdateAsync(ApiAuditLog auditLog)
         {
@@ -100,14 +101,20 @@ namespace ERPAccounting.Infrastructure.Services
                 existing.ErrorMessage = auditLog.ErrorMessage;
                 existing.ExceptionDetails = auditLog.ExceptionDetails;
 
+                // KRITIČNA ISPRAVKA: Eksplicitno markiraj ResponseBody kao Modified
+                // EF Change Tracker ne detektuje NULL -> STRING promenu uvek korektno
+                context.Entry(existing).Property(e => e.ResponseBody).IsModified = true;
+                context.Entry(existing).Property(e => e.RequestBody).IsModified = true;
+
                 await context.SaveChangesAsync(default);
 
                 _logger.LogDebug(
-                    "API call updated: {Method} {Endpoint} - {StatusCode} ({ResponseTime}ms)",
+                    "API call updated: {Method} {Endpoint} - {StatusCode} ({ResponseTime}ms) - ResponseBody: {HasBody}",
                     auditLog.HttpMethod,
                     auditLog.Endpoint,
                     auditLog.ResponseStatusCode,
-                    auditLog.ResponseTimeMs);
+                    auditLog.ResponseTimeMs,
+                    string.IsNullOrEmpty(auditLog.ResponseBody) ? "NULL" : "POPULATED");
             }
             catch (Exception ex)
             {
@@ -201,7 +208,7 @@ namespace ERPAccounting.Infrastructure.Services
                 context.ApiAuditLogEntityChanges.Add(entityChange);
                 await context.SaveChangesAsync(default);
 
-                _logger.LogDebug(
+                _logger.LogInformation(
                     "Logged JSON snapshot for {EntityType} {EntityId} (Operation: {Operation})",
                     entityType,
                     entityId,
