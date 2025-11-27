@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +15,12 @@ namespace ERPAccounting.Infrastructure.Data
     /// Maps all tables and configures relationships.
     /// Database-First approach - entities map to existing tables.
     /// 
-    /// AUDIT SYSTEM:
-    /// - Entity-level audit (CreatedAt, UpdatedAt, IsDeleted) is NOT used
-    /// - All auditing is done via ApiAuditLog + ApiAuditLogEntityChanges tables
-    /// - See ApiAuditMiddleware for automatic API request/response logging
-    /// - SaveChangesAsync automatically tracks entity changes if audit context is set
+    /// AUDIT SYSTEM (NOVI PRISTUP):
+    /// - NE menjamo postojeće entitete (Document, DocumentLineItem, itd.)
+    /// - Koristimo EF ChangeTracker za izvlačenje JSON snapshots
+    /// - Čuvamo kompletno stanje u tblAPIAuditLogEntityChanges
+    /// - Akcija se zaključuje iz HTTP metode (POST=Insert, PUT=Update, DELETE=Delete)
+    /// - JSON se čuva u OldValue/NewValue kolonama
     /// 
     /// TRIGGER COMPATIBILITY:
     /// - All transactional tables have database triggers for auditing/history
@@ -30,6 +32,14 @@ namespace ERPAccounting.Infrastructure.Data
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditLogService? _auditLogService;
         private int? _currentAuditLogId;
+        
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = false,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+            ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+        };
 
         public AppDbContext(
             DbContextOptions<AppDbContext> options,
@@ -39,12 +49,6 @@ namespace ERPAccounting.Infrastructure.Data
             _currentUserService = currentUserService;
             _auditLogService = auditLogService;
         }
-
-        // NOTE: Legacy AuditInterceptor has been removed
-        // Audit is now handled by:
-        // 1. ApiAuditMiddleware - logs all API requests/responses to tblAPIAuditLog
-        // 2. This SaveChangesAsync override - tracks entity changes to tblAPIAuditLogEntityChanges
-        // This provides complete audit trail without modifying entity schemas
 
         /// <summary>
         /// Postavlja trenutni audit log ID za ovaj request.
@@ -56,26 +60,26 @@ namespace ERPAccounting.Infrastructure.Data
         }
 
         /// <summary>
-        /// Override SaveChangesAsync sa automatskim entity tracking-om.
-        /// Ako je _currentAuditLogId setuvan, sve izmene na entitetima će biti logovane u tblAPIAuditLogEntityChanges.
+        /// Override SaveChangesAsync sa automatskim JSON snapshot tracking-om.
+        /// Ako je _currentAuditLogId setuvan, sve izmene na entitetima će biti logovane kao JSON snapshots.
         /// </summary>
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // Ako imamo audit log ID, prikupi promene PRE save-a
-            Dictionary<string, (string EntityType, string EntityId, string Operation, Dictionary<string, (object Old, object New)> Changes)>? entityChanges = null;
+            // Ako imamo audit log ID, prikupi JSON snapshots PRE save-a
+            List<(string EntityType, string EntityId, string Operation, object? OldState, object? NewState)>? snapshots = null;
             
             if (_currentAuditLogId.HasValue && _auditLogService != null)
             {
-                entityChanges = CaptureEntityChanges();
+                snapshots = CaptureEntitySnapshots();
             }
 
             // Izvrši glavni save
             var result = await base.SaveChangesAsync(cancellationToken);
 
-            // Loguj promene POSLE save-a (da bi imali ID-eve novih entiteta)
-            if (entityChanges != null && entityChanges.Any())
+            // Loguj snapshots POSLE save-a (da bi imali ID-eve novih entiteta)
+            if (snapshots != null && snapshots.Any())
             {
-                await LogCapturedChangesAsync(entityChanges);
+                await LogCapturedSnapshotsAsync(snapshots);
             }
 
             // Reset audit log ID
@@ -85,11 +89,12 @@ namespace ERPAccounting.Infrastructure.Data
         }
 
         /// <summary>
-        /// Prikuplja sve promene na entitetima iz ChangeTracker-a.
+        /// NOVA METODA: Prikuplja kompletne JSON snapshots svih promenjenih entiteta.
+        /// Koristi ChangeTracker za izvlačenje stanja pre i posle izmene.
         /// </summary>
-        private Dictionary<string, (string EntityType, string EntityId, string Operation, Dictionary<string, (object Old, object New)> Changes)> CaptureEntityChanges()
+        private List<(string EntityType, string EntityId, string Operation, object? OldState, object? NewState)> CaptureEntitySnapshots()
         {
-            var capturedChanges = new Dictionary<string, (string, string, string, Dictionary<string, (object, object)>)>();
+            var snapshots = new List<(string, string, string, object?, object?)>();
 
             var entries = ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added || 
@@ -106,74 +111,82 @@ namespace ERPAccounting.Infrastructure.Data
                 var entityType = entry.Entity.GetType().Name;
                 var primaryKey = GetPrimaryKeyValue(entry);
                 var operation = entry.State.ToString();
-                var changes = new Dictionary<string, (object Old, object New)>();
 
-                if (entry.State == EntityState.Added)
-                {
-                    // Za Added - samo nove vrednosti
-                    foreach (var property in entry.Properties)
-                    {
-                        if (ShouldAuditProperty(property))
-                        {
-                            changes[property.Metadata.Name] = (null, property.CurrentValue);
-                        }
-                    }
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    // Za Modified - samo promenjena polja
-                    foreach (var property in entry.Properties)
-                    {
-                        if (ShouldAuditProperty(property) && property.IsModified)
-                        {
-                            changes[property.Metadata.Name] = (
-                                property.OriginalValue,
-                                property.CurrentValue
-                            );
-                        }
-                    }
-                }
-                else if (entry.State == EntityState.Deleted)
-                {
-                    // Za Deleted - stare vrednosti
-                    foreach (var property in entry.Properties)
-                    {
-                        if (ShouldAuditProperty(property))
-                        {
-                            changes[property.Metadata.Name] = (property.OriginalValue, null);
-                          }
-                    }
-                }
+                object? oldState = null;
+                object? newState = null;
 
-                if (changes.Any())
+                try
                 {
-                    var key = $"{entityType}:{primaryKey}";
-                    capturedChanges[key] = (entityType, primaryKey, operation, changes);
+                    if (entry.State == EntityState.Added)
+                    {
+                        // Za Added - samo novo stanje
+                        newState = CreateSnapshot(entry, useCurrentValues: true);
+                    }
+                    else if (entry.State == EntityState.Modified)
+                    {
+                        // Za Modified - oba stanja
+                        oldState = CreateSnapshot(entry, useCurrentValues: false);
+                        newState = CreateSnapshot(entry, useCurrentValues: true);
+                    }
+                    else if (entry.State == EntityState.Deleted)
+                    {
+                        // Za Deleted - samo staro stanje
+                        oldState = CreateSnapshot(entry, useCurrentValues: false);
+                    }
+
+                    snapshots.Add((entityType, primaryKey, operation, oldState, newState));
+                }
+                catch (Exception ex)
+                {
+                    // Ne dozvoljavamo da greška u snapshot-u prekine save
+                    // Logger je već pozvan, samo nastavljamo
+                    System.Diagnostics.Debug.WriteLine($"Failed to capture snapshot for {entityType}:{primaryKey} - {ex.Message}");
                 }
             }
 
-            return capturedChanges;
+            return snapshots;
         }
 
         /// <summary>
-        /// Loguje prikupljene promene u audit log.
+        /// Kreira snapshot objekta iz EntityEntry-ja.
         /// </summary>
-        private async Task LogCapturedChangesAsync(
-            Dictionary<string, (string EntityType, string EntityId, string Operation, Dictionary<string, (object Old, object New)> Changes)> entityChanges)
+        private Dictionary<string, object?> CreateSnapshot(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, bool useCurrentValues)
+        {
+            var snapshot = new Dictionary<string, object?>();
+
+            foreach (var property in entry.Properties)
+            {
+                if (ShouldIncludeInSnapshot(property))
+                {
+                    var value = useCurrentValues ? property.CurrentValue : property.OriginalValue;
+                    snapshot[property.Metadata.Name] = value;
+                }
+            }
+
+            return snapshot;
+        }
+
+        /// <summary>
+        /// Loguje prikupljene JSON snapshots u audit log.
+        /// </summary>
+        private async Task LogCapturedSnapshotsAsync(
+            List<(string EntityType, string EntityId, string Operation, object? OldState, object? NewState)> snapshots)
         {
             if (_auditLogService == null || !_currentAuditLogId.HasValue)
                 return;
 
-            foreach (var change in entityChanges.Values)
+            foreach (var snapshot in snapshots)
             {
                 try
                 {
-                    await _auditLogService.LogEntityChangeAsync(
+                    // Loguj kompletan JSON snapshot
+                    await _auditLogService.LogEntitySnapshotAsync(
                         _currentAuditLogId.Value,
-                        change.EntityType,
-                        change.EntityId,
-                        change.Operation,
-                        change.Changes
+                        snapshot.EntityType,
+                        snapshot.EntityId,
+                        snapshot.Operation,
+                        snapshot.OldState,
+                        snapshot.NewState
                     );
                 }
                 catch
@@ -185,18 +198,22 @@ namespace ERPAccounting.Infrastructure.Data
         }
 
         /// <summary>
-        /// Da li treba auditovati ovu property.
+        /// Da li treba uključiti ovu property u snapshot.
         /// </summary>
-        private bool ShouldAuditProperty(Microsoft.EntityFrameworkCore.ChangeTracking.PropertyEntry property)
+        private bool ShouldIncludeInSnapshot(Microsoft.EntityFrameworkCore.ChangeTracking.PropertyEntry property)
         {
             var propertyName = property.Metadata.Name;
 
-            // Ne audituj RowVersion/TimeStamp kolone (binarne vrednosti)
+            // Ne uključuj RowVersion/TimeStamp kolone (binarne vrednosti)
             if (propertyName.EndsWith("TimeStamp") || propertyName.Contains("RowVersion"))
                 return false;
 
-            // Ne audituj internal EF tracking properties
+            // Ne uključuj internal EF tracking properties
             if (propertyName.StartsWith("__"))
+                return false;
+
+            // Ne uključuj navigation properties (one nisu skladištene u bazi)
+            if (property.Metadata.IsNavigation())
                 return false;
 
             return true;
@@ -223,7 +240,7 @@ namespace ERPAccounting.Infrastructure.Data
         public DbSet<DocumentCostVAT> DocumentCostVATs { get; set; } = null!;
 
         // ═══════════════════════════════════════════════════════════════
-        // AUDIT LOG TABLES (new tables for tracking changes)
+        // AUDIT LOG TABLES (tables for tracking changes with JSON snapshots)
         // ═══════════════════════════════════════════════════════════════
         public DbSet<ApiAuditLog> ApiAuditLogs { get; set; } = null!;
         public DbSet<ApiAuditLogEntityChange> ApiAuditLogEntityChanges { get; set; } = null!;
@@ -231,7 +248,7 @@ namespace ERPAccounting.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // NOTE: Global query filter for ISoftDeletable has been REMOVED.
-            // Soft delete is now tracked via ApiAuditLog tables, not entity properties.
+            // Soft delete is now tracked via ApiAuditLog tables with JSON snapshots.
             // This prevents "Invalid column name 'IsDeleted'" SQL exceptions.
 
             // ═══════════════════════════════════════════════════════════════
@@ -241,8 +258,6 @@ namespace ERPAccounting.Infrastructure.Data
             documentEntity.HasKey(e => e.IDDokument);
             
             // CRITICAL: Configure trigger to prevent OUTPUT clause usage
-            // SQL Server triggers are incompatible with OUTPUT clause in INSERT statements
-            // See: https://aka.ms/efcore-docs-sqlserver-save-changes-and-output-clause
             documentEntity.ToTable("tblDokument", t => t.HasTrigger("TR_tblDokument_Insert"));
 
             // RowVersion for concurrency - MANDATORY!
@@ -348,7 +363,6 @@ namespace ERPAccounting.Infrastructure.Data
                 .HasPrecision(19, 4);
 
             // NOTE: IznosBezPDV and IznosPDV are [NotMapped] computed properties
-            // They are calculated from CostLineItems and do NOT exist in the database
 
             // Foreign keys
             costEntity.HasOne(e => e.Document)
