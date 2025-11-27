@@ -55,7 +55,7 @@ public class DocumentCostService : IDocumentCostService
 
     public async Task<DocumentCostDto?> GetCostByIdAsync(int documentId, int costId)
     {
-        var entity = await _costRepository.GetAsync(documentId, costId, includeChildren: true);
+        var entity = await _costRepository.GetAsync(documentId, costId, track: false, includeChildren: true);
         return entity is null ? null : MapToDto(entity);
     }
 
@@ -379,9 +379,13 @@ public class DocumentCostService : IDocumentCostService
         }
     }
 
+    /// <summary>
+    /// KRITIČNA ISPRAVKA: Prosleđuje track parametar u repository!
+    /// </summary>
     private async Task<DocumentCost> EnsureCostExistsAsync(int documentId, int costId, bool track = false)
     {
-        var entity = await _costRepository.GetAsync(documentId, costId, includeChildren: true);
+        // ✅ FIX: Prosleđuje track parametar!
+        var entity = await _costRepository.GetAsync(documentId, costId, track: track, includeChildren: !track);
         if (entity is null)
         {
             throw new NotFoundException(ErrorMessages.DocumentCostNotFound, costId.ToString(), nameof(DocumentCost));
