@@ -212,8 +212,8 @@ namespace ERPAccounting.Infrastructure.Data
             if (propertyName.StartsWith("__"))
                 return false;
 
-            // Ne uključuj navigation properties (one nisu skladištene u bazi)
-            if (property.Metadata.IsNavigation())
+            // Ne uključuj shadow properties (properties koje ne postoje u C# klasi)
+            if (property.Metadata.IsShadowProperty())
                 return false;
 
             return true;
