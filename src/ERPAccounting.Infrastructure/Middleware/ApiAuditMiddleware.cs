@@ -5,14 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 using ERPAccounting.Common.Interfaces;
 using ERPAccounting.Domain.Entities;
+using ERPAccounting.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace ERPAccounting.Infrastructure.Middleware
 {
     /// <summary>
-    /// Middleware za automatsko logovanje svih API poziva.
+    /// Middleware za automatsko logovanje svih API poziva sa JSON snapshot podrškom.
     /// Hvataj request/response i čuva u tblAPIAuditLog tabelu.
+    /// 
+    /// NOVI PRISTUP:
+    /// - Postavlja _currentAuditLogId na AppDbContext
+    /// - SaveChangesAsync automatski hvata JSON snapshots iz ChangeTracker-a
+    /// - JSON se čuva u tblAPIAuditLogEntityChanges
     /// </summary>
     public class ApiAuditMiddleware
     {
@@ -28,7 +34,8 @@ namespace ERPAccounting.Infrastructure.Middleware
         public async Task InvokeAsync(
             HttpContext context,
             IAuditLogService auditLogService,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            AppDbContext dbContext)
         {
             var request = context.Request;
             var originalBodyStream = context.Response.Body;
@@ -77,20 +84,32 @@ namespace ERPAccounting.Infrastructure.Middleware
             context.Response.Body = responseBodyStream;
 
             var stopwatch = Stopwatch.StartNew();
+            int auditLogId = 0;
 
             try
             {
-                // 4. Izvrši request pipeline
+                // 4. Kreiraj audit log I DOBIJ ID
+                await auditLogService.LogAsync(auditLog);
+                auditLogId = auditLog.IDAuditLog; // EF postavlja ID nakon insert-a
+
+                // 5. KRITIČNO: Postavi audit log ID na DbContext
+                // Ovo omogućava SaveChangesAsync da zna gde da loguje promene
+                if (auditLogId > 0)
+                {
+                    dbContext.SetCurrentAuditLogId(auditLogId);
+                }
+
+                // 6. Izvrši request pipeline (ovde se događa SaveChangesAsync sa audit tracking-om)
                 await _next(context);
 
                 stopwatch.Stop();
 
-                // 5. Nakon uspešnog izvršavanja
+                // 7. Nakon uspešnog izvršavanja
                 auditLog.ResponseStatusCode = context.Response.StatusCode;
                 auditLog.IsSuccess = context.Response.StatusCode >= 200 && context.Response.StatusCode < 400;
                 auditLog.ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds;
 
-                // 6. Pokušaj da pročitaš response body za error responses
+                // 8. Pokušaj da pročitaš response body za error responses
                 if (responseBodyStream.CanSeek && responseBodyStream.Length > 0)
                 {
                     responseBodyStream.Seek(0, SeekOrigin.Begin);
@@ -105,10 +124,10 @@ namespace ERPAccounting.Infrastructure.Middleware
                     responseBodyStream.Seek(0, SeekOrigin.Begin);
                 }
 
-                // 7. Zapiši audit log
-                await auditLogService.LogAsync(auditLog);
+                // 9. Ažuriraj audit log sa response podacima
+                await auditLogService.UpdateAsync(auditLog);
 
-                // 8. Vrati response u originalni stream
+                // 10. Vrati response u originalni stream
                 if (responseBodyStream.Length > 0)
                 {
                     await responseBodyStream.CopyToAsync(originalBodyStream);
@@ -118,7 +137,7 @@ namespace ERPAccounting.Infrastructure.Middleware
             {
                 stopwatch.Stop();
 
-                // 9. U slučaju exceptiona, upiši detalje
+                // 11. U slučaju exceptiona, upiši detalje
                 auditLog.ResponseStatusCode = context.Response.StatusCode > 0 
                     ? context.Response.StatusCode 
                     : StatusCodes.Status500InternalServerError;
@@ -129,15 +148,15 @@ namespace ERPAccounting.Infrastructure.Middleware
 
                 try
                 {
-                    await auditLogService.LogAsync(auditLog);
+                    await auditLogService.UpdateAsync(auditLog);
                 }
                 catch (Exception auditEx)
                 {
                     // Ne dozvoljavamo da audit failure crashuje aplikaciju
-                    _logger.LogError(auditEx, "Failed to log audit entry for failed request");
+                    _logger.LogError(auditEx, "Failed to update audit entry for failed request");
                 }
 
-                // 10. Vrati response body u originalni stream ako ima nečega
+                // 12. Vrati response body u originalni stream ako ima nečega
                 if (responseBodyStream.CanSeek && responseBodyStream.Length > 0)
                 {
                     responseBodyStream.Seek(0, SeekOrigin.Begin);
@@ -149,7 +168,7 @@ namespace ERPAccounting.Infrastructure.Middleware
             }
             finally
             {
-                // 11. Uvek vrati originalni stream i očisti privremeni
+                // 13. Uvek vrati originalni stream i očisti privremeni
                 context.Response.Body = originalBodyStream;
                 await responseBodyStream.DisposeAsync();
             }
