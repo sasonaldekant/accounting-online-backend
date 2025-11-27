@@ -7,6 +7,159 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-27: Stable ApiAuditMiddleware Without Stream Disposal Issues
+
+**🐛 CRITICAL: ObjectDisposedException and Incomplete Audit Logging**
+
+**Problemi:**
+
+1. **ObjectDisposedException u runtime-u:**
+   ```
+   System.ObjectDisposedException: Cannot access a closed Stream.
+   at System.IO.MemoryStream.Seek(...)
+   at ApiAuditMiddleware.InvokeAsync(...) line 96
+   ```
+
+2. **API crash-uje na svaki request:**
+   - Middleware zatvarala `MemoryStream` prerano
+   - `HttpResponse.Body` postajao nedostupan
+   - Ni DeveloperExceptionPage nije mogao da prikaže grešku
+
+3. **tblAPIAuditLog se ne puni kao ranije:**
+   - Zbog exception-a u middleware-u, audit log nije bio zapisan
+   - Podaci ostajali NULL ili incomplete
+
+**Uzrok:**
+
+Prethodne iteracije middleware-a koristile `using (var responseBody = new MemoryStream())` u kombinaciji sa kasnijim pristupom istom stream-u posle disposa. To je vodilo do:
+
+- `ObjectDisposedException` pri pokušaju `Seek()` nad zatvorenim stream-om
+- Nemognost kopiranja response-a natrag u originalni stream
+- Crash aplikacije na svaki HTTP request
+
+**Rešenje:**
+
+**Potpuno prepisana logika middleware-a na stabilan i robustan način:**
+
+```csharp
+public async Task InvokeAsync(
+    HttpContext context,
+    IAuditLogService auditLogService,
+    ICurrentUserService currentUserService)
+{
+    var originalBodyStream = context.Response.Body;
+    
+    // Privremeni stream za response - BEZ using bloka
+    var responseBodyStream = new MemoryStream();
+    context.Response.Body = responseBodyStream;
+
+    try
+    {
+        // Izvrši request pipeline
+        await _next(context);
+
+        // Populate audit log sa response podacima
+        auditLog.ResponseStatusCode = context.Response.StatusCode;
+        auditLog.IsSuccess = context.Response.StatusCode >= 200 && context.Response.StatusCode < 400;
+
+        // Pročitaj response body samo ako je moguće
+        if (responseBodyStream.CanSeek && responseBodyStream.Length > 0)
+        {
+            responseBodyStream.Seek(0, SeekOrigin.Begin);
+            // Čitanje...
+            responseBodyStream.Seek(0, SeekOrigin.Begin);
+        }
+
+        // Zapiši audit log
+        await auditLogService.LogAsync(auditLog);
+
+        // Kopiraj response natrag u originalni stream
+        if (responseBodyStream.Length > 0)
+        {
+            await responseBodyStream.CopyToAsync(originalBodyStream);
+        }
+    }
+    catch (Exception ex)
+    {
+        // Handle exception i audit logging
+        // ...
+        throw;
+    }
+    finally
+    {
+        // Uvek vrati originalni stream i dispose privremeni
+        context.Response.Body = originalBodyStream;
+        await responseBodyStream.DisposeAsync();
+    }
+}
+```
+
+**Ključne izmene:**
+
+1. **Nema `using` bloka oko `responseBodyStream`:**
+   - Stream se eksplicitno dispose-uje u `finally` bloku
+   - Omogućava pristup stream-u kroz ceo scope metode
+
+2. **Provera `CanSeek` pre svake Seek operacije:**
+   - Nikad ne pokrećemo `Seek()` bez provere da li je stream seekable
+   - Sprečava `NotSupportedException`
+
+3. **Originalni stream se uvek vraća u `finally`:**
+   - Garantuje da ASP.NET Core može nastaviti sa radom
+   - Omogućava DeveloperExceptionPage da korektno prikaže greške
+
+4. **Audit logging se dešava PRE copy-a:**
+   - Audit podaci se zapisuju dok je stream još živ
+   - Nema rizika od premature dispose-a
+
+5. **Dodat ILogger dependency:**
+   - Omogućava logging grešaka u audit procesu
+   - Ne crashuje aplikaciju ako audit fail-uje
+
+**Impact:**
+
+- ✅ **Stabilnost vraćena** - API radi bez crash-eva
+- ✅ **tblAPIAuditLog se puni** - svi HTTP requestovi se loguju
+- ✅ **DeveloperExceptionPage radi** - greške se prikazuju korektno
+- ✅ **ResponseBody se loguje za errore** - debugging friendly
+- ✅ **Performance overhead minimalan** - samo jedan dodatni MemoryStream
+
+**Files Changed:**
+- `src/ERPAccounting.Infrastructure/Middleware/ApiAuditMiddleware.cs`
+  - Kompletno prepisana logika za stream handling
+  - Dodat `ILogger<ApiAuditMiddleware>` dependency
+  - Uklonjen `using` blok oko `responseBodyStream`
+  - Dodat `finally` blok za cleanup
+  - Dodato `CanSeek` provere pre svih Seek operacija
+
+**Test Results:**
+
+```bash
+# Build uspeh
+dotnet clean && dotnet build
+# Build succeeded.
+#     0 Warning(s)
+#     0 Error(s)
+
+# API radi bez exceptiona
+dotnet run --project src/ERPAccounting.API
+# Now listening on: https://localhost:7280
+# Application started. Press Ctrl+C to shut down.
+
+# SQL provera
+SELECT TOP 5 * FROM tblAPIAuditLog ORDER BY IDAuditLog DESC
+# Results: Svi requestovi logovani sa ResponseStatusCode, ResponseTimeMs, IsSuccess
+```
+
+**Napomena:**
+
+Ova verzija middleware-a je **bazna stabilna verzija** koja loguje samo HTTP request/response nivo.
+Entity-level change tracking (`tblAPIAuditLogEntityChanges`) će biti implementiran u sledećem commit-u
+kao odvojena funkcionalnost kroz `AppDbContext.SaveChangesAsync()` override, bez daljeg petljanja
+po middleware stream handling logici.
+
+---
+
 ### Fixed - 2025-11-27: ApiAuditMiddleware Build Errors and Complete Audit System
 
 **🐛 CRITICAL: Build Failures and Incomplete Audit Tracking**
