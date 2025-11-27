@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using ERPAccounting.Domain.Entities;
 using ERPAccounting.Common.Interfaces;
 
@@ -34,6 +35,7 @@ namespace ERPAccounting.Infrastructure.Data
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditLogService? _auditLogService;
         private readonly IHttpContextAccessor? _httpContextAccessor;
+        private readonly ILogger<AppDbContext>? _logger;
         
         private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
         {
@@ -47,11 +49,13 @@ namespace ERPAccounting.Infrastructure.Data
             DbContextOptions<AppDbContext> options,
             ICurrentUserService currentUserService,
             IHttpContextAccessor? httpContextAccessor = null,
-            IAuditLogService? auditLogService = null) : base(options)
+            IAuditLogService? auditLogService = null,
+            ILogger<AppDbContext>? logger = null) : base(options)
         {
             _currentUserService = currentUserService;
             _httpContextAccessor = httpContextAccessor;
             _auditLogService = auditLogService;
+            _logger = logger;
         }
 
         /// <summary>
