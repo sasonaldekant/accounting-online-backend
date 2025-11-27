@@ -7,6 +7,126 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-11-27: ApiAuditMiddleware Build Errors and Complete Audit System
+
+**🐛 CRITICAL: Build Failures and Incomplete Audit Tracking**
+
+**Problemi:**
+
+1. **Build greške u ApiAuditMiddleware:**
+   ```
+   CS1061: 'bool' does not contain a definition for 'GetAwaiter'
+   CS0266: Cannot implicitly convert type 'bool?' to 'bool'
+   CS0006: Metadata file ERPAccounting.Infrastructure.dll could not be found
+   ```
+
+2. **tblAPIAuditLog se ne popunjava kompletno:**
+   - ResponseBody, ResponseTimeMs, IsSuccess - sve **NULL**
+   - Middleware pozivao `LogAsync` dva puta umesto `LogAsync` + `UpdateAsync`
+
+3. **tblAPIAuditLogEntityChanges potpuno prazna:**
+   - Entity change tracking nije bio implementiran
+   - AppDbContext.SaveChangesAsync nije prikupljao promene
+
+**Rešenje:**
+
+**1. Ispravljena Middleware Async/Await Sintaksa**
+
+Pre:
+```csharp
+if (TrySeekToBeginning(responseBody))  // bool kao if condition
+{
+    auditLog.ResponseBody = await ReadResponseBodyAsync(responseBody);
+}
+
+await TrySeekToBeginning(responseBody); // ❌ await na bool metodi!
+```
+
+Posle:
+```csharp
+responseBody.Seek(0, SeekOrigin.Begin); // ✅ Direktan poziv
+using (var reader = new StreamReader(responseBody))
+{
+    if (!auditLog.IsSuccess)
+    {
+        auditLog.ResponseBody = await reader.ReadToEndAsync();
+    }
+}
+
+responseBody.Seek(0, SeekOrigin.Begin); // ✅ Bez await
+await responseBody.CopyToAsync(originalBodyStream);
+```
+
+**2. Dodat UpdateAsync Umesto Duplog LogAsync**
+
+```csharp
+// Kreiranje audit log-a PRE izvršavanja requesta
+await auditLogService.LogAsync(auditLog);
+dbContext.SetCurrentAuditLogId(auditLog.IDAuditLog);
+
+// Request execution
+await _next(context);
+
+// Ažuriranje sa response podacima
+await auditLogService.UpdateAsync(auditLog); // ✅ UPDATE umesto ADD
+```
+
+**3. Entity Change Tracking u AppDbContext**
+
+```csharp
+public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+{
+    // Prikupi promene PRE save-a
+    Dictionary<string, (...)> entityChanges = null;
+    
+    if (_currentAuditLogId.HasValue && _auditLogService != null)
+    {
+        entityChanges = CaptureEntityChanges();
+    }
+
+    // Glavni save
+    var result = await base.SaveChangesAsync(cancellationToken);
+
+    // Loguj promene POSLE save-a (da bi imali ID-eve)
+    if (entityChanges != null && entityChanges.Any())
+    {
+        await LogCapturedChangesAsync(entityChanges);
+    }
+
+    _currentAuditLogId = null;
+    return result;
+}
+```
+
+**Impact:**
+
+- ✅ Build uspešan - sve compile greške ispravljene
+- ✅ tblAPIAuditLog kompletno popunjena (ResponseStatusCode, ResponseTimeMs, IsSuccess)
+- ✅ tblAPIAuditLogEntityChanges automatski popunjena sa field-level promenama
+- ✅ Swagger UI prikazuje If-Match header input za PUT/PATCH operacije
+
+**Files Changed:**
+- `src/ERPAccounting.Infrastructure/Middleware/ApiAuditMiddleware.cs` - Ispravljena async sintaksa
+- `src/ERPAccounting.Common/Interfaces/IAuditLogService.cs` - Dodat UpdateAsync metod
+- `src/ERPAccounting.Infrastructure/Services/AuditLogService.cs` - Implementacija UpdateAsync
+- `src/ERPAccounting.Infrastructure/Data/AppDbContext.cs` - Entity change tracking
+- `src/ERPAccounting.API/Controllers/DocumentCostsController.cs` - If-Match header parametar
+
+**Test Results:**
+
+```sql
+-- tblAPIAuditLog - sada kompletno
+SELECT TOP 1 * FROM tblAPIAuditLog ORDER BY IDAuditLog DESC
+-- Sve kolone popunjene: ResponseStatusCode=200, ResponseTimeMs>0, IsSuccess=1
+
+-- tblAPIAuditLogEntityChanges - sada radi
+SELECT * FROM tblAPIAuditLogEntityChanges 
+WHERE IDAuditLog = (SELECT TOP 1 IDAuditLog FROM tblAPIAuditLog ORDER BY IDAuditLog DESC)
+-- Results: Field-level promene (Description, ExchangeRate, DocumentNumber)
+```
+
+---
+
 ### Added - 2025-11-27: Entity-Level Audit Tracking
 
 **🎉 MAJOR: Complete Entity Change Audit System**
@@ -66,7 +186,7 @@ IDEntityChange | IDAuditLog | EntityType    | EntityId | PropertyName    | OldVa
 - ✅ Ne modićira entity schema (nema CreatedAt/UpdatedAt/IsDeleted kolona)
 - ✅ Minimalan overhead - samo jedan dodatni query po SaveChanges
 - ✅ Failure u audit-u ne prekida main transaction
-- ✅ Compatible sa postojecom table structure
+- ✅ Compatible sa postojećom table structure
 
 ---
 
