@@ -148,7 +148,7 @@ namespace ERPAccounting.Infrastructure.Middleware
                 throw;
             }
             finally
-            {}
+            {
                 // 11. Uvek vrati originalni stream i očisti privremeni
                 context.Response.Body = originalBodyStream;
                 await responseBodyStream.DisposeAsync();
