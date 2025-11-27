@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using ERPAccounting.Common.Interfaces;
 using ERPAccounting.Domain.Entities;
-using ERPAccounting.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 
 namespace ERPAccounting.Infrastructure.Middleware
@@ -13,7 +12,6 @@ namespace ERPAccounting.Infrastructure.Middleware
     /// <summary>
     /// Middleware za automatsko logovanje svih API poziva.
     /// Hvataj request/response i čuva u tblAPIAuditLog tabelu.
-    /// Setuje audit log ID na AppDbContext za entity-level tracking.
     /// </summary>
     public class ApiAuditMiddleware
     {
@@ -27,8 +25,7 @@ namespace ERPAccounting.Infrastructure.Middleware
         public async Task InvokeAsync(
             HttpContext context, 
             IAuditLogService auditLogService,
-            ICurrentUserService currentUserService,
-            AppDbContext dbContext)
+            ICurrentUserService currentUserService)
         {
             // Kreiraj audit log objekat
             var auditLog = new ApiAuditLog
@@ -67,75 +64,69 @@ namespace ERPAccounting.Infrastructure.Middleware
             
             // Capture response body
             var originalBodyStream = context.Response.Body;
-            var responseBody = new MemoryStream();
-            context.Response.Body = responseBody;
-
-            try
+            
+            using (var responseBody = new MemoryStream())
             {
-                // BITNO: Loguj audit log PRE pozivanja next middleware-a
-                // da bi imali IDAuditLog za entity tracking
-                await auditLogService.LogAsync(auditLog);
+                context.Response.Body = responseBody;
 
-                // Setuj audit log ID na DbContext - entity changes će se vezati za ovaj request
-                dbContext.SetCurrentAuditLogId(auditLog.IDAuditLog);
-
-                // Pozovi sledeći middleware u pipeline
-                await _next(context);
-                
-                stopwatch.Stop();
-                
-                // Populate response info
-                auditLog.ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds;
-                auditLog.ResponseStatusCode = context.Response.StatusCode;
-                auditLog.IsSuccess = context.Response.StatusCode < 400;
-
-                // Capture response body (opciono - samo za error responses)
-                responseBody.Seek(0, SeekOrigin.Begin);
-                using (var reader = new StreamReader(responseBody, leaveOpen: true))
-                {
-                    // Loguj samo za error responses (IsSuccess == false)
-                    if (auditLog.IsSuccess == false)
-                    {
-                        auditLog.ResponseBody = await reader.ReadToEndAsync();
-                    }
-                }
-                
-                // Copy response back to original stream
-                responseBody.Seek(0, SeekOrigin.Begin);
-                await responseBody.CopyToAsync(originalBodyStream);
-
-                // Ažuriraj audit log sa response podacima
-                await auditLogService.UpdateAsync(auditLog);
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                
-                // Log exception info
-                auditLog.ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds;
-                auditLog.IsSuccess = false;
-                auditLog.ErrorMessage = ex.Message;
-                auditLog.ExceptionDetails = ex.ToString();
-                auditLog.ResponseStatusCode = 500;
-
-                // Ažuriraj audit log sa exception podacima
                 try
                 {
-                    await auditLogService.UpdateAsync(auditLog);
+                    // Pozovi sledeći middleware u pipeline
+                    await _next(context);
+                    
+                    stopwatch.Stop();
+                    
+                    // Populate response info
+                    auditLog.ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds;
+                    auditLog.ResponseStatusCode = context.Response.StatusCode;
+                    auditLog.IsSuccess = context.Response.StatusCode < 400;
+
+                    // Capture response body (opciono - samo za error responses)
+                    responseBody.Seek(0, SeekOrigin.Begin);
+                    using (var reader = new StreamReader(responseBody))
+                    {
+                        // Loguj samo za error responses
+                        if (auditLog.IsSuccess == false)
+                        {
+                            auditLog.ResponseBody = await reader.ReadToEndAsync();
+                        }
+                    }
+                    
+                    // Copy response back to original stream
+                    responseBody.Seek(0, SeekOrigin.Begin);
+                    await responseBody.CopyToAsync(originalBodyStream);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Ignore audit update failure
+                    stopwatch.Stop();
+                    
+                    // Log exception info
+                    auditLog.ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds;
+                    auditLog.IsSuccess = false;
+                    auditLog.ErrorMessage = ex.Message;
+                    auditLog.ExceptionDetails = ex.ToString();
+                    auditLog.ResponseStatusCode = 500;
+                    
+                    // Re-throw exception - audit ne sme da proguta greške
+                    throw;
                 }
-                
-                // Re-throw exception - audit ne sme da proguta greške
-                throw;
-            }
-            finally
-            {
-                // Vrati originalni stream i dispose responseBody
-                context.Response.Body = originalBodyStream;
-                await responseBody.DisposeAsync();
+                finally
+                {
+                    // VAŽNO: Loguj asinkrono da ne blokiraš request
+                    // Fire and forget pattern - ne čekamo da se logovanje završi
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await auditLogService.LogAsync(auditLog);
+                        }
+                        catch
+                        {
+                            // Ignore errors - audit failure ne sme da crash-uje aplikaciju
+                            // AuditLogService već loguje greške u svoj logger
+                        }
+                    });
+                }
             }
         }
     }
