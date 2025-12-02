@@ -149,7 +149,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ApiAuditMiddleware>();
 
-app.UseHttpsRedirection();
+// 🔧 FIX: Disable HTTPS redirect in development
+// Frontend uses http://localhost:3000, Backend http://localhost:5286
+// HTTPS redirect causes 307 redirects which break CORS
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowFrontend");
 
