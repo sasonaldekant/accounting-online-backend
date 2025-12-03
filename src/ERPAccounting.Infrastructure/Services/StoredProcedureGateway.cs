@@ -233,103 +233,88 @@ public class StoredProcedureGateway : IStoredProcedureGateway
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // 🆕 NEW METHODS - Server-Side Search
-    // ═══════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
+    // 🆕 NEW METHODS - Server-Side Search using Raw SQL (NO Stored Procedures)
+    // ══════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Search partners using spPartnerSearch stored procedure.
+    /// Search partners using raw SQL query (NO stored procedure needed).
+    /// Efficiently queries tblPartner with filtering and limit.
     /// </summary>
     public async Task<List<PartnerLookup>> SearchPartnersAsync(string searchTerm, int limit)
     {
         try
         {
-            return await _context.Database
+            var normalizedTerm = $"%{searchTerm.Trim()}%";
+
+            var results = await _context.Database
                 .SqlQueryRaw<PartnerLookup>(
-                    @"DECLARE @result TABLE (
-                            IdPartner INT,
-                            NazivPartnera NVARCHAR(100),
-                            Mesto NVARCHAR(100),
-                            Opis NVARCHAR(250),
-                            IdStatus INT,
-                            IdNacinOporezivanjaNabavka CHAR(2),
-                            ObracunAkciza BIT,
-                            ObracunPorez BIT,
-                            IdReferent INT,
-                            SifraPartner VARCHAR(255)
-                        );
-
-                        INSERT INTO @result
-                        EXEC spPartnerSearch @SearchTerm = {0}, @Limit = {1};
-
-                        SELECT IdPartner,
-                               NazivPartnera,
-                               Mesto,
-                               Opis,
-                               IdStatus,
-                               IdNacinOporezivanjaNabavka,
-                               ObracunAkciza,
-                               ObracunPorez,
-                               IdReferent,
-                               SifraPartner
-                        FROM @result;",
-                    searchTerm,
+                    @"SELECT TOP ({1})
+                        PartnerID AS IdPartner,
+                        Naziv AS NazivPartnera,
+                        Mesto,
+                        Opis,
+                        StatusID AS IdStatus,
+                        NacinOporezivanjaID_Nabavka AS IdNacinOporezivanjaNabavka,
+                        ObracunAkciza,
+                        ObracunPorez,
+                        ReferentID AS IdReferent,
+                        Sifra AS SifraPartner
+                    FROM tblPartner
+                    WHERE StatusNabavka = 'Aktivan'
+                      AND (Sifra LIKE {0} OR Naziv LIKE {0})
+                    ORDER BY Naziv",
+                    normalizedTerm,
                     limit)
                 .ToListAsync();
+
+            return results;
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException(
-                "Greška pri izvršavanju spPartnerSearch", ex);
+                "Greška pri pretrazi partnera", ex);
         }
     }
 
     /// <summary>
-    /// Search articles using spArticleSearch stored procedure.
+    /// Search articles using raw SQL query (NO stored procedure needed).
+    /// Efficiently queries tblArtikal with filtering and limit.
     /// </summary>
     public async Task<List<ArticleLookup>> SearchArticlesAsync(string searchTerm, int limit)
     {
         try
         {
-            return await _context.Database
+            var normalizedTerm = $"%{searchTerm.Trim()}%";
+
+            var results = await _context.Database
                 .SqlQueryRaw<ArticleLookup>(
-                    @"DECLARE @result TABLE (
-                            IdArtikal INT,
-                            SifraArtikal NVARCHAR(100),
-                            NazivArtikla NVARCHAR(255),
-                            JedinicaMere VARCHAR(6),
-                            IdPoreskaStopa CHAR(2),
-                            ProcenatPoreza FLOAT,
-                            Akciza DECIMAL(19,4),
-                            KoeficijentKolicine DECIMAL(19,4),
-                            ImaLot BIT,
-                            OtkupnaCena DECIMAL(19,4) NULL,
-                            PoljoprivredniProizvod BIT
-                        );
-
-                        INSERT INTO @result
-                        EXEC spArticleSearch @SearchTerm = {0}, @Limit = {1};
-
-                        SELECT IdArtikal,
-                               SifraArtikal,
-                               NazivArtikla,
-                               JedinicaMere,
-                               IdPoreskaStopa,
-                               ProcenatPoreza,
-                               Akciza,
-                               KoeficijentKolicine,
-                               ImaLot,
-                               OtkupnaCena,
-                               PoljoprivredniProizvod
-                        FROM @result;",
-                    searchTerm,
+                    @"SELECT TOP ({1})
+                        ArtikalID AS IdArtikal,
+                        Sifra AS SifraArtikal,
+                        Naziv AS NazivArtikla,
+                        JedinicaMere,
+                        PoreskaStopaID AS IdPoreskaStopa,
+                        ProcenatPoreza,
+                        Akciza,
+                        KoeficijentKolicine,
+                        ImaLot,
+                        OtkupnaCena,
+                        PoljoprivredniProizvod
+                    FROM tblArtikal
+                    WHERE StatusUlaz = 'Aktivan'
+                      AND (Sifra LIKE {0} OR Naziv LIKE {0})
+                    ORDER BY Naziv",
+                    normalizedTerm,
                     limit)
                 .ToListAsync();
+
+            return results;
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException(
-                "Greška pri izvršavanju spArticleSearch", ex);
+                "Greška pri pretrazi artikala", ex);
         }
     }
 }
