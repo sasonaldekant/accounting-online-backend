@@ -121,9 +121,9 @@ public class StoredProcedureService : IStoredProcedureService
         source.NazivPartnera
     );
 
-    private static TaxRateComboDto MapToTaxRateDto(TaxRateLookup source) => new(
-        source.IdPoreskaStopa,
-        source.Naziv
+    private static TaxRateComboDto MapToTaxRateDto(TaxRateLookup source) => new TaxRateComboDto(
+        IdPoreskaStopa: source.IdPoreskaStopa,
+        Naziv: source.Naziv
     );
 
     private static ArticleComboDto MapToArticleDto(ArticleLookup source) => new(
