@@ -123,9 +123,7 @@ public class StoredProcedureService : IStoredProcedureService
 
     private static TaxRateComboDto MapToTaxRateDto(TaxRateLookup source) => new(
         source.IdPoreskaStopa,
-        source.Naziv,
-        source.ProcenatPoreza
-        
+        source.Naziv
     );
 
     private static ArticleComboDto MapToArticleDto(ArticleLookup source) => new(
