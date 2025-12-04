@@ -234,21 +234,23 @@ public class StoredProcedureGateway : IStoredProcedureGateway
     }
 
     // ══════════════════════════════════════════════════════════════
-    // 🆕 NEW METHODS - Server-Side Search using Raw SQL (Matching SP Structure)
+    // 🆕 NEW METHODS - Server-Side Search using Raw SQL
     // ══════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Search partners using raw SQL query matching spPartnerComboStatusNabavka structure.
-    /// Efficiently queries tblPartner with JOINs to tblMesto and tblStatus.
-    /// Returns same structure as spPartnerComboStatusNabavka for consistency.
+    /// Search partners using raw SQL query that replicates spPartnerComboStatusNabavka logic.
+    /// Efficiently queries tblPartner with JOIN to tblStatus and tblMesto, applying search filter and TOP N limit.
     /// </summary>
+    /// <param name="searchTerm">Search term to match against SifraPartner or NazivPartnera</param>
+    /// <param name="limit">Maximum number of results to return</param>
+    /// <returns>List of PartnerLookup matching the search criteria</returns>
     public async Task<List<PartnerLookup>> SearchPartnersAsync(string searchTerm, int limit)
     {
         try
         {
             var normalizedTerm = $"%{searchTerm.Trim()}%";
 
-            // This query mimics spPartnerComboStatusNabavka with search filtering
+            // Replicates spPartnerComboStatusNabavka with search filter
             var results = await _context.Database
                 .SqlQueryRaw<PartnerLookup>(
                     @"SELECT TOP ({1})
@@ -265,7 +267,8 @@ public class StoredProcedureGateway : IStoredProcedureGateway
                     FROM dbo.tblPartner p
                     INNER JOIN dbo.tblStatus s ON p.IDStatus = s.IDStatus
                     LEFT OUTER JOIN dbo.tblMesto m ON p.IDMesto = m.IDMesto
-                    WHERE (p.SifraPartner LIKE {0} OR p.NazivPartnera LIKE {0})
+                    WHERE p.SifraPartner LIKE {0}
+                       OR p.NazivPartnera LIKE {0}
                     ORDER BY p.NazivPartnera",
                     normalizedTerm,
                     limit)
@@ -281,17 +284,19 @@ public class StoredProcedureGateway : IStoredProcedureGateway
     }
 
     /// <summary>
-    /// Search articles using raw SQL query matching spArtikalComboUlaz structure.
-    /// Efficiently queries tblArtikal with JOIN to tblPoreskaStopa.
-    /// Returns same structure as spArtikalComboUlaz for consistency.
+    /// Search articles using raw SQL query that replicates spArtikalComboUlaz logic.
+    /// Efficiently queries tblArtikal with JOIN to tblPoreskaStopa, applying search filter and TOP N limit.
     /// </summary>
+    /// <param name="searchTerm">Search term to match against SifraArtikal or NazivArtikla</param>
+    /// <param name="limit">Maximum number of results to return</param>
+    /// <returns>List of ArticleLookup matching the search criteria</returns>
     public async Task<List<ArticleLookup>> SearchArticlesAsync(string searchTerm, int limit)
     {
         try
         {
             var normalizedTerm = $"%{searchTerm.Trim()}%";
 
-            // This query mimics spArtikalComboUlaz with search filtering
+            // Replicates spArtikalComboUlaz with search filter
             var results = await _context.Database
                 .SqlQueryRaw<ArticleLookup>(
                     @"SELECT TOP ({1})
@@ -308,7 +313,8 @@ public class StoredProcedureGateway : IStoredProcedureGateway
                         a.PoljoprivredniProizvod
                     FROM dbo.tblArtikal a
                     INNER JOIN dbo.tblPoreskaStopa ps ON a.IDPoreskaStopa = ps.IDPoreskaStopa
-                    WHERE (a.SifraArtikal LIKE {0} OR a.NazivArtikla LIKE {0})
+                    WHERE a.SifraArtikal LIKE {0}
+                       OR a.NazivArtikla LIKE {0}
                     ORDER BY a.SifraSort",
                     normalizedTerm,
                     limit)
