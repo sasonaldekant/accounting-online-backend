@@ -234,36 +234,42 @@ public class StoredProcedureGateway : IStoredProcedureGateway
     }
 
     // ══════════════════════════════════════════════════════════════
-    // 🆕 NEW METHODS - Server-Side Search using Raw SQL (NO Stored Procedures)
+    // 🆕 NEW METHODS - Server-Side Search using Raw SQL
     // ══════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Search partners using raw SQL query (NO stored procedure needed).
-    /// Efficiently queries tblPartner with filtering and limit.
+    /// Search partners using raw SQL query that replicates spPartnerComboStatusNabavka logic.
+    /// Efficiently queries tblPartner with JOIN to tblStatus and tblMesto, applying search filter and TOP N limit.
     /// </summary>
+    /// <param name="searchTerm">Search term to match against SifraPartner or NazivPartnera</param>
+    /// <param name="limit">Maximum number of results to return</param>
+    /// <returns>List of PartnerLookup matching the search criteria</returns>
     public async Task<List<PartnerLookup>> SearchPartnersAsync(string searchTerm, int limit)
     {
         try
         {
             var normalizedTerm = $"%{searchTerm.Trim()}%";
 
+            // Replicates spPartnerComboStatusNabavka with search filter
             var results = await _context.Database
                 .SqlQueryRaw<PartnerLookup>(
                     @"SELECT TOP ({1})
-                        PartnerID AS IdPartner,
-                        Naziv AS NazivPartnera,
-                        Mesto,
-                        Opis,
-                        StatusID AS IdStatus,
-                        NacinOporezivanjaID_Nabavka AS IdNacinOporezivanjaNabavka,
-                        ObracunAkciza,
-                        ObracunPorez,
-                        ReferentID AS IdReferent,
-                        Sifra AS SifraPartner
-                    FROM tblPartner
-                    WHERE StatusNabavka = 'Aktivan'
-                      AND (Sifra LIKE {0} OR Naziv LIKE {0})
-                    ORDER BY Naziv",
+                        p.NazivPartnera AS [NAZIV PARTNERA],
+                        m.NazivMesta AS MESTO,
+                        p.IDPartner,
+                        s.Opis,
+                        p.IDStatus,
+                        s.IDNacinOporezivanjaNabavka,
+                        s.ObracunAkciza,
+                        s.ObracunPorez,
+                        p.IDReferent,
+                        p.SifraPartner AS [ŠIFRA]
+                    FROM dbo.tblPartner p
+                    INNER JOIN dbo.tblStatus s ON p.IDStatus = s.IDStatus
+                    LEFT OUTER JOIN dbo.tblMesto m ON p.IDMesto = m.IDMesto
+                    WHERE p.SifraPartner LIKE {0}
+                       OR p.NazivPartnera LIKE {0}
+                    ORDER BY p.NazivPartnera",
                     normalizedTerm,
                     limit)
                 .ToListAsync();
@@ -278,33 +284,38 @@ public class StoredProcedureGateway : IStoredProcedureGateway
     }
 
     /// <summary>
-    /// Search articles using raw SQL query (NO stored procedure needed).
-    /// Efficiently queries tblArtikal with filtering and limit.
+    /// Search articles using raw SQL query that replicates spArtikalComboUlaz logic.
+    /// Efficiently queries tblArtikal with JOIN to tblPoreskaStopa, applying search filter and TOP N limit.
     /// </summary>
+    /// <param name="searchTerm">Search term to match against SifraArtikal or NazivArtikla</param>
+    /// <param name="limit">Maximum number of results to return</param>
+    /// <returns>List of ArticleLookup matching the search criteria</returns>
     public async Task<List<ArticleLookup>> SearchArticlesAsync(string searchTerm, int limit)
     {
         try
         {
             var normalizedTerm = $"%{searchTerm.Trim()}%";
 
+            // Replicates spArtikalComboUlaz with search filter
             var results = await _context.Database
                 .SqlQueryRaw<ArticleLookup>(
                     @"SELECT TOP ({1})
-                        ArtikalID AS IdArtikal,
-                        Sifra AS SifraArtikal,
-                        Naziv AS NazivArtikla,
-                        JedinicaMere,
-                        PoreskaStopaID AS IdPoreskaStopa,
-                        ProcenatPoreza,
-                        Akciza,
-                        KoeficijentKolicine,
-                        ImaLot,
-                        OtkupnaCena,
-                        PoljoprivredniProizvod
-                    FROM tblArtikal
-                    WHERE StatusUlaz = 'Aktivan'
-                      AND (Sifra LIKE {0} OR Naziv LIKE {0})
-                    ORDER BY Naziv",
+                        a.IDArtikal,
+                        a.SifraArtikal AS SIFRA,
+                        a.NazivArtikla AS [NAZIV ARTIKLA],
+                        a.IDJedinicaMere AS JM,
+                        a.IDPoreskaStopa,
+                        ps.ProcenatPoreza,
+                        a.Akciza,
+                        a.KoeficijentKolicine,
+                        a.ImaLot,
+                        a.OtkupnaCena,
+                        a.PoljoprivredniProizvod
+                    FROM dbo.tblArtikal a
+                    INNER JOIN dbo.tblPoreskaStopa ps ON a.IDPoreskaStopa = ps.IDPoreskaStopa
+                    WHERE a.SifraArtikal LIKE {0}
+                       OR a.NazivArtikla LIKE {0}
+                    ORDER BY a.SifraSort",
                     normalizedTerm,
                     limit)
                 .ToListAsync();
