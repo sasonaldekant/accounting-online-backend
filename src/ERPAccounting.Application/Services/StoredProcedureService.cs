@@ -125,6 +125,7 @@ public class StoredProcedureService : IStoredProcedureService
         source.IdPoreskaStopa,
         source.Naziv,
         source.ProcenatPoreza
+        
     );
 
     private static ArticleComboDto MapToArticleDto(ArticleLookup source) => new(

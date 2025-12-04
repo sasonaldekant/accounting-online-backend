@@ -230,4 +230,4 @@ public class LookupService : ILookupService
         source.SifraArtikal,
         source.NazivArtikla
     );
-}
+};
