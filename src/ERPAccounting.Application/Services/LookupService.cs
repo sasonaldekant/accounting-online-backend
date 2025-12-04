@@ -159,10 +159,9 @@ public class LookupService : ILookupService
         source.ObracunPorezPomocni
     );
 
-    // FIX: Changed from ImeRadnika to ImePrezime
     private static ReferentComboDto MapToReferentDto(ReferentLookup source) => new(
         source.IdRadnik,
-        source.ImePrezime,
+        source.ImePrezime,  // Matches SQL alias "IME I PREZIME"
         source.SifraRadnika
     );
 
@@ -173,11 +172,11 @@ public class LookupService : ILookupService
         source.NazivPartnera
     );
 
-    // FIX: Added ProcenatPoreza mapping
+    // FIX: Removed ProcenatPoreza - not available from spPoreskaStopaCombo
     private static TaxRateComboDto MapToTaxRateDto(TaxRateLookup source) => new(
         source.IdPoreskaStopa,
-        source.Naziv,
-        source.ProcenatPoreza
+        source.Naziv
+        // ProcenatPoreza - NOT available from this SP
     );
 
     private static ArticleComboDto MapToArticleDto(ArticleLookup source) => new(
@@ -186,7 +185,7 @@ public class LookupService : ILookupService
         source.NazivArtikla,
         source.JedinicaMere,
         source.IdPoreskaStopa,
-        source.ProcenatPoreza,
+        source.ProcenatPoreza,  // Available from spArtikalComboUlaz
         source.Akciza,
         source.KoeficijentKolicine,
         source.ImaLot,
