@@ -32,10 +32,10 @@ public record TaxationMethodComboDto(
 );
 
 // SP 4: spReferentCombo
-// FIX: Changed from ImeRadnika to ImePrezime to match SQL column alias "IME I PREZIME"
+// Returns: IDRadnik, ImeRadnika as [IME I PREZIME], SifraRadnika
 public record ReferentComboDto(
     int IdRadnik,
-    string ImePrezime,
+    string ImePrezime,  // Matches SQL alias "IME I PREZIME"
     string? SifraRadnika
 );
 
@@ -48,21 +48,24 @@ public record DocumentNDComboDto(
 );
 
 // SP 6: spPoreskaStopaCombo
-// FIX: Added ProcenatPoreza field for tax rate percentage display
+// Returns: IDPoreskaStopa, Naziv (ONLY 2 columns)
+// NOTE: ProcenatPoreza is NOT available from this SP.
+//       It's only available via spArtikalComboUlaz when fetching articles.
 public record TaxRateComboDto(
     string IdPoreskaStopa,
-    string Naziv,
-    double ProcenatPoreza
+    string Naziv
+    // ProcenatPoreza - REMOVED: Not returned by spPoreskaStopaCombo
 );
 
 // SP 7: spArtikalComboUlaz
+// This SP DOES include ProcenatPoreza via JOIN with tblPoreskaStopa
 public record ArticleComboDto(
     int IdArtikal,
     string SifraArtikal,
     string NazivArtikla,
     string? JedinicaMere,
     string? IdPoreskaStopa,
-    double ProcenatPoreza,
+    double ProcenatPoreza,  // Available HERE
     decimal Akciza,
     decimal KoeficijentKolicine,
     bool ImaLot,
@@ -80,7 +83,6 @@ public record DocumentCostsListDto(
 );
 
 // SP 9: spUlazniRacuniIzvedeniTroskoviCombo
-// ObracunPorez is an int to mirror the stored procedure output and prevent InvalidCastException.
 public record CostTypeComboDto(
     int IdUlazniRacuniIzvedeni,
     string Naziv,
