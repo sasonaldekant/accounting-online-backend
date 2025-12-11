@@ -1,84 +1,106 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ERPAccounting.Application.DTOs.Documents;
 
 /// <summary>
 /// DTO za kreiranje novog dokumenta
 /// Mapira se na tblDokument tabelu
 /// </summary>
-public record CreateDocumentDto(
+public record CreateDocumentDto
+{
     /// <summary>
     /// Tip dokumenta (IDVrstaDokumenta) - obavezno
     /// Primer: "UR" (Ulazna Kalkulacija VP), "RO" (Račun Otpremnica), "FO", "AR"
     /// </summary>
-    string DocumentTypeCode,
+    [Required(ErrorMessage = "Tip dokumenta je obavezan")]
+    [StringLength(10, ErrorMessage = "Tip dokumenta ne može biti duži od 10 karaktera")]
+    public string DocumentTypeCode { get; init; } = string.Empty;
 
     /// <summary>
     /// Broj dokumenta (BrojDokumenta) - obavezno
     /// Primer: "T001-2025", "UR-2025-001"
     /// </summary>
-    string DocumentNumber,
+    [Required(ErrorMessage = "Broj dokumenta je obavezan")]
+    [StringLength(50, ErrorMessage = "Broj dokumenta ne može biti duži od 50 karaktera")]
+    public string DocumentNumber { get; init; } = string.Empty;
 
     /// <summary>
     /// Datum dokumenta (Datum) - obavezno
     /// </summary>
-    DateTime DocumentDate,
+    [Required(ErrorMessage = "Datum dokumenta je obavezan")]
+    public DateTime DocumentDate { get; init; }
 
     /// <summary>
     /// ID partnera/dobavljača (IDPartner) - opciono
     /// </summary>
-    int? PartnerId,
+    public int? PartnerId { get; init; }
 
     /// <summary>
     /// ID organizacione jedinice/magacina (IDOrganizacionaJedinica) - obavezno
     /// </summary>
-    int OrganizationalUnitId,
+    [Required(ErrorMessage = "Magacin je obavezan")]
+    [Range(1, int.MaxValue, ErrorMessage = "ID magacina mora biti veći od 0")]
+    public int OrganizationalUnitId { get; init; }
 
     /// <summary>
     /// ID referenta/radnika (IDRadnik) - opciono
     /// </summary>
-    int? ReferentId,
+    public int? ReferentId { get; init; }
 
     /// <summary>
-    /// ID načina oporezivanja (IDNacinOporezivanja) - opciono
+    /// ID načina oporezivanja (IDNacinOporezivanja) - OBAVEZNO
+    /// Ovo polje je obavezno za pravilno kreiranje dokumenta
     /// </summary>
-    int? TaxationMethodId,
+    [Required(ErrorMessage = "Način oporezivanja je obavezan")]
+    [Range(1, int.MaxValue, ErrorMessage = "ID načina oporezivanja mora biti veći od 0")]
+    public int TaxationMethodId { get; init; }
 
     /// <summary>
     /// Datum dospeća (DatumDPO) - opciono
     /// </summary>
-    DateTime? DueDate,
+    public DateTime? DueDate { get; init; }
 
     /// <summary>
     /// Datum valute (DatumValute) - opciono
     /// </summary>
-    DateTime? CurrencyDate,
+    public DateTime? CurrencyDate { get; init; }
 
     /// <summary>
     /// Broj dokumenta partnera (PartnerBrojDokumenta) - opciono
     /// </summary>
-    string? PartnerDocumentNumber,
+    [StringLength(50, ErrorMessage = "Broj dokumenta partnera ne može biti duži od 50 karaktera")]
+    public string? PartnerDocumentNumber { get; init; }
 
     /// <summary>
     /// Datum dokumenta partnera (PartnerDatumDokumenta) - opciono
     /// </summary>
-    DateTime? PartnerDocumentDate,
+    public DateTime? PartnerDocumentDate { get; init; }
 
     /// <summary>
     /// ID statusa dokumenta (IDStatus) - opciono
     /// Primer: 1 = Draft, 2 = Active, 3 = Closed
+    /// Default: 1 (Draft)
     /// </summary>
-    int? StatusId,
+    public int? StatusId { get; init; } = 1;
 
     /// <summary>
-    /// ID valute (IDValuta) - opciono
+    /// ID valute (IDValuta) - obavezno
+    /// Primer: ID za RSD, EUR, USD
     /// </summary>
-    int? CurrencyId,
+    [Required(ErrorMessage = "Valuta je obavezna")]
+    [Range(1, int.MaxValue, ErrorMessage = "ID valute mora biti veći od 0")]
+    public int CurrencyId { get; init; }
 
     /// <summary>
-    /// Kurs valute (KursValute) - opciono, default 1.0
+    /// Kurs valute (KursValute) - opciono
+    /// Default: 1.0 za RSD
     /// </summary>
-    decimal? ExchangeRate,
+    [Range(0.0001, 999999.9999, ErrorMessage = "Kurs mora biti između 0.0001 i 999999.9999")]
+    public decimal ExchangeRate { get; init; } = 1.0m;
 
     /// <summary>
     /// Napomena (Napomena) - opciono
     /// </summary>
-    string? Notes);
+    [StringLength(500, ErrorMessage = "Napomena ne može biti duža od 500 karaktera")]
+    public string? Notes { get; init; }
+}
