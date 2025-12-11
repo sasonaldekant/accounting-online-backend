@@ -30,6 +30,14 @@ public class CreateDocumentValidator : AbstractValidator<CreateDocumentDto>
             .GreaterThan(0)
             .WithMessage("Organizaciona jedinica (Magacin) je obavezna");
 
+        RuleFor(x => x.TaxationMethodId)
+            .GreaterThan(0)
+            .WithMessage("Nacin oporezivanja je obavezan");
+
+        RuleFor(x => x.CurrencyId)
+            .GreaterThan(0)
+            .WithMessage("Valuta je obavezna");
+
         RuleFor(x => x.PartnerDocumentNumber)
             .MaximumLength(200)
             .WithMessage("Broj dokumenta partnera moze biti maksimalno 200 karaktera")
@@ -56,10 +64,11 @@ public class CreateDocumentValidator : AbstractValidator<CreateDocumentDto>
             .WithMessage("Datum dokumenta partnera mora biti validan datum (godina >= 1900)")
             .When(x => x.PartnerDocumentDate.HasValue);
 
-        // Optional fields are validated only if provided
+        // ExchangeRate je decimal (NOT nullable) - default 1.0m
         RuleFor(x => x.ExchangeRate)
-            .GreaterThan(0)
-            .WithMessage("Kurs valute mora biti veci od 0")
-            .When(x => x.ExchangeRate.HasValue);
+            .GreaterThan(0.0001m)
+            .WithMessage("Kurs valute mora biti veci od 0.0001")
+            .LessThanOrEqualTo(999999.9999m)
+            .WithMessage("Kurs valute mora biti manji ili jednak 999999.9999");
     }
 }
