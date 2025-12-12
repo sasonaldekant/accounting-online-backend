@@ -7,6 +7,7 @@ using ERPAccounting.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -69,6 +70,11 @@ builder.Services.AddControllers(options =>
 })
 .AddJsonOptions(options =>
 {
+    // FIXED: Dodaj custom DateTime converter za ISO 8601 format sa timezone-om
+    // KRITIČNO: Mora biti PRIJE drugih convertera
+    options.JsonSerializerOptions.Converters.Add(new IsoDateTimeConverter());
+    options.JsonSerializerOptions.Converters.Add(new IsoNullableDateTimeConverter());
+    
     // Podrška za više formata DateTime-a
     // Prihvata: "2025-11-26", "2025-11-26T02:01:17", "2025-11-26 02:01:17.863"
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -166,3 +172,133 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+/// <summary>
+/// FIXED: Custom JSON converter za DateTime koji pravilno handla ISO 8601 format sa timezone-om
+/// 
+/// Podržava formate:
+/// - "2025-12-12" (datum samo, interpretira se kao UTC)
+/// - "2025-12-12T00:00:00" (datetime bez timezone, UTC)
+/// - "2025-12-12T00:00:00Z" (UTC timezone)
+/// - "2025-12-12T00:00:00.000Z" (UTC sa milisekundama)
+/// - "2025-12-12T00:00:00+01:00" (sa timezone offset)
+/// 
+/// KRITIČNO: Sprječava vraćanje DateTime.MinValue ({1.1.0001}) zbog neuspješne deserijalizacije
+/// </summary>
+public class IsoDateTimeConverter : JsonConverter<DateTime>
+{
+    public override DateTime Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options)
+    {
+        string? dateString = reader.GetString();
+
+        if (string.IsNullOrEmpty(dateString))
+        {
+            return DateTime.MinValue;
+        }
+
+        // 1. Pokušaj ISO 8601 sa RoundtripKind (čuva timezone info)
+        if (DateTime.TryParse(
+            dateString,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind | DateTimeStyles.AdjustToUniversal,
+            out DateTime result))
+        {
+            return result;
+        }
+
+        // 2. Ako ne uspije, pokušaj sa AssumeUniversal (tretiraj kao UTC ako nema timezone)
+        if (DateTime.TryParse(
+            dateString,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out DateTime resultAsUtc))
+        {
+            return resultAsUtc;
+        }
+
+        // 3. Fallback: samo parsiraj normalcno
+        if (DateTime.TryParse(dateString, out DateTime fallback))
+        {
+            return fallback;
+        }
+
+        return DateTime.MinValue;
+    }
+
+    public override void Write(
+        Utf8JsonWriter writer,
+        DateTime value,
+        JsonSerializerOptions options)
+    {
+        // Konvertuj u UTC i ispisu u ISO 8601 formatu sa 'Z' sufiksom
+        writer.WriteStringValue(value.ToUniversalTime().ToString("o"));
+    }
+}
+
+/// <summary>
+/// FIXED: Custom JSON converter za nullable DateTime
+/// </summary>
+public class IsoNullableDateTimeConverter : JsonConverter<DateTime?>
+{
+    public override DateTime? Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return null;
+        }
+
+        string? dateString = reader.GetString();
+
+        if (string.IsNullOrEmpty(dateString))
+        {
+            return null;
+        }
+
+        // Ista logika kao IsoDateTimeConverter
+        if (DateTime.TryParse(
+            dateString,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind | DateTimeStyles.AdjustToUniversal,
+            out DateTime result))
+        {
+            return result;
+        }
+
+        if (DateTime.TryParse(
+            dateString,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out DateTime resultAsUtc))
+        {
+            return resultAsUtc;
+        }
+
+        if (DateTime.TryParse(dateString, out DateTime fallback))
+        {
+            return fallback;
+        }
+
+        return null;
+    }
+
+    public override void Write(
+        Utf8JsonWriter writer,
+        DateTime? value,
+        JsonSerializerOptions options)
+    {
+        if (value.HasValue)
+        {
+            writer.WriteStringValue(value.Value.ToUniversalTime().ToString("o"));
+        }
+        else
+        {
+            writer.WriteNullValue();
+        }
+    }
+}
