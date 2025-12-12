@@ -19,5 +19,5 @@ public interface IDocumentService
     /// </summary>
     /// <param name="searchDto">Parametri pretrage</param>
     /// <returns>Paginovani rezultati pretrage</returns>
-    Task<DocumentSearchResultDto> SearchDocumentsAsync(DocumentSearchDto searchDto);
+    Task<PaginatedResult<DocumentDto>> SearchDocumentsAsync(DocumentSearchDto searchDto);
 }
