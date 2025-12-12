@@ -285,6 +285,7 @@ public class StoredProcedureGateway : IStoredProcedureGateway
 
     /// <summary>
     /// Search articles using raw SQL query that replicates spArtikalComboUlaz logic.
+    /// FIXED: Cast Akciza and KoeficijentKolicine to DECIMAL(19,4) to match DTO expectations.
     /// Efficiently queries tblArtikal with JOIN to tblPoreskaStopa, applying search filter and TOP N limit.
     /// </summary>
     /// <param name="searchTerm">Search term to match against SifraArtikal or NazivArtikla</param>
@@ -297,6 +298,7 @@ public class StoredProcedureGateway : IStoredProcedureGateway
             var normalizedTerm = $"%{searchTerm.Trim()}%";
 
             // Replicates spArtikalComboUlaz with search filter
+            // FIXED: CAST Akciza, KoeficijentKolicine, OtkupnaCena to DECIMAL(19,4) to match ArticleLookup DTO
             var results = await _context.Database
                 .SqlQueryRaw<ArticleLookup>(
                     @"SELECT TOP ({1})
@@ -306,10 +308,10 @@ public class StoredProcedureGateway : IStoredProcedureGateway
                         a.IDJedinicaMere AS JM,
                         a.IDPoreskaStopa,
                         ps.ProcenatPoreza,
-                        a.Akciza,
-                        a.KoeficijentKolicine,
+                        CAST(a.Akciza AS DECIMAL(19,4)) AS Akciza,
+                        CAST(a.KoeficijentKolicine AS DECIMAL(19,4)) AS KoeficijentKolicine,
                         a.ImaLot,
-                        a.OtkupnaCena,
+                        CAST(a.OtkupnaCena AS DECIMAL(19,4)) AS OtkupnaCena,
                         a.PoljoprivredniProizvod
                     FROM dbo.tblArtikal a
                     INNER JOIN dbo.tblPoreskaStopa ps ON a.IDPoreskaStopa = ps.IDPoreskaStopa
