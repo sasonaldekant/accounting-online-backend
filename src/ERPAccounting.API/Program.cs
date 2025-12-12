@@ -184,6 +184,8 @@ app.Run();
 /// - "2025-12-12T00:00:00+01:00" (sa timezone offset)
 /// 
 /// KRITIČNO: Sprječava vraćanje DateTime.MinValue ({1.1.0001}) zbog neuspješne deserijalizacije
+/// 
+/// ISPRAVLJENO: DateTimeStyles.RoundtripKind NIJE kompatibilan sa AdjustToUniversal
 /// </summary>
 public class IsoDateTimeConverter : JsonConverter<DateTime>
 {
@@ -199,32 +201,46 @@ public class IsoDateTimeConverter : JsonConverter<DateTime>
             return DateTime.MinValue;
         }
 
-        // 1. Pokušaj ISO 8601 sa RoundtripKind (čuva timezone info)
+        // ✅ ISPRAVKA 1: Pokušaj sa RoundtripKind (čuva timezone info)
+        // RoundtripKind se koristi SAMO, bez kombinovanja sa AssumeLocal/AssumeUniversal/AdjustToUniversal
         if (DateTime.TryParse(
             dateString,
             CultureInfo.InvariantCulture,
-            DateTimeStyles.RoundtripKind | DateTimeStyles.AdjustToUniversal,
+            DateTimeStyles.RoundtripKind,
             out DateTime result))
         {
+            // Ako je parsed kao Utc, vrati kako jeste
+            // Ako je Local, konvertuj u UTC
+            if (result.Kind == DateTimeKind.Local)
+            {
+                return result.ToUniversalTime();
+            }
             return result;
         }
 
-        // 2. Ako ne uspije, pokušaj sa AssumeUniversal (tretiraj kao UTC ako nema timezone)
+        // ✅ ISPRAVKA 2: Ako RoundtripKind ne uspije, pokušaj sa AssumeUniversal
+        // AssumeUniversal tretira datume bez timezone kao UTC
         if (DateTime.TryParse(
             dateString,
             CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            DateTimeStyles.AssumeUniversal,
             out DateTime resultAsUtc))
         {
             return resultAsUtc;
         }
 
-        // 3. Fallback: samo parsiraj normalcno
+        // ✅ ISPRAVKA 3: Fallback - samo parsiraj normalcno
         if (DateTime.TryParse(dateString, out DateTime fallback))
         {
+            // Ako je fallback Local, konvertuj u UTC
+            if (fallback.Kind == DateTimeKind.Local)
+            {
+                return fallback.ToUniversalTime();
+            }
             return fallback;
         }
 
+        // Ultimativni fallback - nema greške, vrati min value
         return DateTime.MinValue;
     }
 
@@ -260,30 +276,41 @@ public class IsoNullableDateTimeConverter : JsonConverter<DateTime?>
             return null;
         }
 
-        // Ista logika kao IsoDateTimeConverter
+        // ✅ ISPRAVKA 1: Pokušaj sa RoundtripKind
         if (DateTime.TryParse(
             dateString,
             CultureInfo.InvariantCulture,
-            DateTimeStyles.RoundtripKind | DateTimeStyles.AdjustToUniversal,
+            DateTimeStyles.RoundtripKind,
             out DateTime result))
         {
+            if (result.Kind == DateTimeKind.Local)
+            {
+                return result.ToUniversalTime();
+            }
             return result;
         }
 
+        // ✅ ISPRAVKA 2: Pokušaj sa AssumeUniversal
         if (DateTime.TryParse(
             dateString,
             CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            DateTimeStyles.AssumeUniversal,
             out DateTime resultAsUtc))
         {
             return resultAsUtc;
         }
 
+        // ✅ ISPRAVKA 3: Fallback
         if (DateTime.TryParse(dateString, out DateTime fallback))
         {
+            if (fallback.Kind == DateTimeKind.Local)
+            {
+                return fallback.ToUniversalTime();
+            }
             return fallback;
         }
 
+        // Ako niko od parsera ne uspije, vrati null umjesto greške
         return null;
     }
 
