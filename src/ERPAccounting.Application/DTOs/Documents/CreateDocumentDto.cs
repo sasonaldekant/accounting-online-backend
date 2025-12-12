@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace ERPAccounting.Application.DTOs.Documents;
 
@@ -26,8 +27,11 @@ public record CreateDocumentDto
 
     /// <summary>
     /// Datum dokumenta (Datum) - obavezno
+    /// KRITIČNO: Mora biti u ISO 8601 formatu sa timezone-om: "2025-12-12T00:00:00.000Z"
+    /// JsonPropertyName osigurava da se pravilno mapira iz JSON-a
     /// </summary>
     [Required(ErrorMessage = "Datum dokumenta je obavezan")]
+    [JsonPropertyName("documentDate")]
     public DateTime DocumentDate { get; init; }
 
     /// <summary>
@@ -57,12 +61,16 @@ public record CreateDocumentDto
 
     /// <summary>
     /// Datum dospeća (DatumDPO) - opciono
+    /// KRITIČNO: Mora biti u ISO 8601 formatu sa timezone-om
     /// </summary>
+    [JsonPropertyName("dueDate")]
     public DateTime? DueDate { get; init; }
 
     /// <summary>
     /// Datum valute (DatumValute) - opciono
+    /// KRITIČNO: Mora biti u ISO 8601 formatu sa timezone-om
     /// </summary>
+    [JsonPropertyName("currencyDate")]
     public DateTime? CurrencyDate { get; init; }
 
     /// <summary>
@@ -73,7 +81,9 @@ public record CreateDocumentDto
 
     /// <summary>
     /// Datum dokumenta partnera (PartnerDatumDokumenta) - opciono
+    /// KRITIČNO: Mora biti u ISO 8601 formatu sa timezone-om
     /// </summary>
+    [JsonPropertyName("partnerDocumentDate")]
     public DateTime? PartnerDocumentDate { get; init; }
 
     /// <summary>
