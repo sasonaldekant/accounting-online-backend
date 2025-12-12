@@ -126,7 +126,7 @@ public class DocumentService : IDocumentService
     /// Napomena: Ova implementacija koristi GetPaginatedAsync sa search parametrom
     /// Za kompleksnije filtere, trebalo bi refaktorisati na IQueryable<> pristup
     /// </summary>
-    public async Task<DocumentSearchResultDto> SearchDocumentsAsync(DocumentSearchDto searchDto)
+    public async Task<PaginatedResult<DocumentDto>> SearchDocumentsAsync(DocumentSearchDto searchDto)
     {
         ArgumentNullException.ThrowIfNull(searchDto);
 
@@ -142,20 +142,7 @@ public class DocumentService : IDocumentService
 
         var documentDtos = _mapper.Map<List<DocumentDto>>(items);
 
-        var totalPages = (totalCount + searchDto.PageSize - 1) / searchDto.PageSize;
-        var hasPreviousPage = searchDto.PageNumber > 1;
-        var hasNextPage = searchDto.PageNumber < totalPages;
-
-        return new DocumentSearchResultDto
-        {
-            Documents = documentDtos,
-            TotalCount = totalCount,
-            PageNumber = searchDto.PageNumber,
-            PageSize = searchDto.PageSize,
-            TotalPages = totalPages,
-            HasPreviousPage = hasPreviousPage,
-            HasNextPage = hasNextPage
-        };
+        return new PaginatedResult<DocumentDto>(documentDtos, totalCount, searchDto.PageNumber, searchDto.PageSize);
     }
 
     private static bool MatchesRowVersion(Document entity, byte[] expectedRowVersion)
