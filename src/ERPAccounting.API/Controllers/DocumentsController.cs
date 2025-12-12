@@ -43,9 +43,9 @@ namespace ERPAccounting.API.Controllers
         /// <param name="searchDto">Parametri pretrage</param>
         /// <returns>Paginovana lista dokumenata</returns>
         [HttpPost("search")]
-        [ProducesResponseType(typeof(DocumentSearchResultDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginatedResult<DocumentDto>), StatusCodes.Status200OK)] // FIXED: Use PaginatedResult<DocumentDto> instead of DocumentSearchResultDto
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<DocumentSearchResultDto>> SearchDocuments([FromBody] DocumentSearchDto searchDto)
+        public async Task<ActionResult<PaginatedResult<DocumentDto>>> SearchDocuments([FromBody] DocumentSearchDto searchDto) // FIXED: Return PaginatedResult<DocumentDto>
         {
             try
             {
@@ -62,16 +62,18 @@ namespace ERPAccounting.API.Controllers
 
                 var result = await _documentService.SearchDocumentsAsync(searchDto);
                 Response.Headers["X-Total-Count"] = result.TotalCount.ToString();
-                Response.Headers["X-Page-Number"] = result.PageNumber.ToString();
+                Response.Headers["X-Page-Number"] = result.Page.ToString(); // FIXED: Use Page instead of PageNumber
                 Response.Headers["X-Page-Size"] = result.PageSize.ToString();
-                Response.Headers["X-Total-Pages"] = result.TotalPages.ToString();
+                
+                var totalPages = (result.TotalCount + result.PageSize - 1) / result.PageSize;
+                Response.Headers["X-Total-Pages"] = totalPages.ToString();
                 
                 _logger.LogInformation(
                     "Document search: {Filters} returned {Count} results (page {Page}/{TotalPages})",
                     new { searchDto.DocumentNumber, searchDto.PartnerId, searchDto.DateFrom, searchDto.DateTo },
                     result.TotalCount,
-                    result.PageNumber,
-                    result.TotalPages);
+                    result.Page,
+                    totalPages);
 
                 return Ok(result);
             }
